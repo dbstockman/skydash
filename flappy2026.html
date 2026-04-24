@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FLAPZ — Fly in Style</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
+
+  :root {
+    --gold: #FFD700;
+    --gold2: #FFA500;
+    --neon: #00FFFF;
+    --neon2: #FF00FF;
+    --purple: #7B2FBE;
+    --dark: #050510;
+    --panel: rgba(10,10,40,0.92);
+    --btn: linear-gradient(135deg,#7B2FBE,#00FFFF);
+    --btn2: linear-gradient(135deg,#FF6B00,#FFD700);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    background:#050510;
+    font-family:'Rajdhani',sans-serif;
+    color:#fff;
+    overflow:hidden;
+    width:100vw; height:100vh;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  #gameWrap {
+    position:relative;
+    width:400px; height:700px;
+    overflow:hidden;
+    border-radius:24px;
+    box-shadow:0 0 80px #7B2FBE88, 0 0 200px #00FFFF22;
+    border:1px solid #7B2FBE66;
+  }
+
+  canvas { display:block; width:400px; height:700px; }
+
+  /* ── SCREENS ── */
+  .screen {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    background:transparent;
+    z-index:10;
+    transition:opacity .3s;
+  }
+  .screen.hidden { opacity:0; pointer-events:none; }
+
+  /* ── HOME ── */
+  #homeScreen { background:linear-gradient(180deg,#050510 0%,#0a0530 60%,#050510 100%); }
+  .logo {
+    font-family:'Orbitron',sans-serif;
+    font-size:52px; font-weight:900;
+    background:linear-gradient(135deg,#FFD700,#FF6B00,#FF00FF,#00FFFF);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    text-shadow:none;
+    letter-spacing:4px;
+    animation:logoPulse 2s ease-in-out infinite;
+  }
+  .tagline { font-size:14px; color:#00FFFF99; letter-spacing:6px; margin-top:4px; }
+  @keyframes logoPulse {
+    0%,100%{ filter:brightness(1) drop-shadow(0 0 20px #FF00FF88); }
+    50%{ filter:brightness(1.3) drop-shadow(0 0 40px #00FFFF); }
+  }
+
+  .bigBtn {
+    margin-top:32px;
+    padding:16px 56px;
+    border:none; border-radius:50px;
+    font-family:'Orbitron',sans-serif; font-size:18px; font-weight:700;
+    cursor:pointer;
+    background:var(--btn);
+    color:#fff;
+    box-shadow:0 0 30px #00FFFF55;
+    letter-spacing:2px;
+    transition:transform .15s, box-shadow .15s;
+    position:relative; overflow:hidden;
+  }
+  .bigBtn:active { transform:scale(.96); }
+  .bigBtn::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+    border-radius:50px;
+  }
+
+  .homeNav {
+    display:flex; gap:12px; margin-top:20px;
+  }
+  .navBtn {
+    padding:10px 20px; border-radius:12px;
+    border:1px solid #7B2FBE88;
+    background:rgba(123,47,190,.25);
+    color:#fff; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:600;
+    cursor:pointer; letter-spacing:1px;
+    transition:background .2s, box-shadow .2s;
+  }
+  .navBtn:hover, .navBtn:active { background:rgba(123,47,190,.55); box-shadow:0 0 16px #7B2FBE88; }
+
+  .coinDisplay {
+    position:absolute; top:20px; right:20px;
+    background:rgba(0,0,0,.5);
+    border:1px solid #FFD70088;
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:15px; font-weight:700;
+    color:#FFD700;
+    display:flex; align-items:center; gap:6px;
+  }
+
+  /* ── HUD ── */
+  #hud {
+    position:absolute; top:0; left:0; right:0;
+    padding:16px 20px;
+    display:flex; align-items:center; justify-content:space-between;
+    z-index:5; pointer-events:none;
+  }
+  #hud.hidden { display:none; }
+  #scoreDisplay {
+    font-family:'Orbitron',sans-serif; font-size:28px; font-weight:900;
+    color:#fff;
+    text-shadow:0 0 20px #00FFFF;
+  }
+  #boostBar {
+    width:80px; height:8px;
+    background:rgba(255,255,255,.15);
+    border-radius:4px; overflow:hidden;
+  }
+  #boostFill {
+    height:100%; width:100%;
+    background:linear-gradient(90deg,#00FFFF,#FF00FF);
+    border-radius:4px;
+    transition:width .1s;
+  }
+  .hudIcons { display:flex; gap:8px; align-items:center; }
+  .hudIcon {
+    width:36px; height:36px;
+    border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    background:rgba(0,0,0,.4);
+    border:1px solid rgba(255,255,255,.2);
+    pointer-events:all;
+    cursor:pointer;
+  }
+
+  /* ── PANELS (Shop / Leaderboard / Egg) ── */
+  .panel {
+    position:absolute; inset:0;
+    background:var(--panel);
+    backdrop-filter:blur(12px);
+    z-index:20;
+    display:flex; flex-direction:column;
+    border-radius:24px;
+    overflow:hidden;
+  }
+  .panel.hidden { display:none; }
+
+  .panelHeader {
+    padding:20px 20px 12px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid rgba(255,255,255,.1);
+  }
+  .panelTitle {
+    font-family:'Orbitron',sans-serif;
+    font-size:20px; font-weight:700;
+    background:linear-gradient(135deg,#FFD700,#FF00FF);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .closeBtn {
+    width:32px; height:32px; border-radius:50%;
+    background:rgba(255,255,255,.1);
+    border:none; color:#fff; font-size:16px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+
+  .tabs {
+    display:flex; gap:4px; padding:12px 16px 0;
+  }
+  .tab {
+    flex:1; padding:8px; border-radius:10px;
+    background:transparent; border:1px solid rgba(255,255,255,.15);
+    color:rgba(255,255,255,.5); font-family:'Rajdhani',sans-serif;
+    font-size:13px; font-weight:600; cursor:pointer; letter-spacing:1px;
+    transition:.2s;
+  }
+  .tab.active {
+    background:linear-gradient(135deg,#7B2FBE,#00FFFF33);
+    border-color:#7B2FBE;
+    color:#fff;
+  }
+
+  .shopGrid {
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:12px; padding:14px 14px;
+    overflow-y:auto; flex:1;
+  }
+  .shopItem {
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:16px;
+    padding:16px 12px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .2s, background .2s;
+    position:relative;
+  }
+  .shopItem.owned { border-color:#FFD700; background:rgba(255,215,0,.08); }
+  .shopItem.equipped { border-color:#00FFFF; background:rgba(0,255,255,.1); }
+  .shopItem:active { transform:scale(.97); }
+  .itemEmoji { font-size:36px; margin-bottom:8px; display:block; }
+  .itemName { font-size:13px; font-weight:700; color:#fff; }
+  .itemPrice {
+    font-size:12px; color:#FFD700; margin-top:4px;
+    display:flex; align-items:center; justify-content:center; gap:4px;
+  }
+  .ownedBadge {
+    position:absolute; top:8px; right:8px;
+    background:#FFD700; color:#000;
+    font-size:9px; font-weight:800;
+    border-radius:6px; padding:2px 6px;
+  }
+  .equippedBadge {
+    position:absolute; top:8px; right:8px;
+    background:#00FFFF; color:#000;
+    font-size:9px; font-weight:800;
+    border-radius:6px; padding:2px 6px;
+  }
+
+  /* ── LEADERBOARD ── */
+  .lbList { padding:12px 16px; overflow-y:auto; flex:1; }
+  .lbRow {
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px; border-radius:12px;
+    margin-bottom:8px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .lbRank {
+    font-family:'Orbitron',sans-serif;
+    font-size:16px; font-weight:900; width:28px; text-align:center;
+  }
+  .lbRank.gold { color:#FFD700; }
+  .lbRank.silver { color:#C0C0C0; }
+  .lbRank.bronze { color:#CD7F32; }
+  .lbAvatar { font-size:24px; }
+  .lbInfo { flex:1; }
+  .lbName { font-size:14px; font-weight:700; }
+  .lbScore { font-size:12px; color:#00FFFF; }
+  .lbYou { border-color:#7B2FBE88; background:rgba(123,47,190,.15); }
+
+  /* ── EGG ── */
+  #eggPanel .eggZone {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:16px;
+  }
+  .eggImg { font-size:90px; animation:eggWobble 2s ease-in-out infinite; cursor:pointer; }
+  @keyframes eggWobble {
+    0%,100%{ transform:rotate(-5deg) scale(1); }
+    50%{ transform:rotate(5deg) scale(1.05); }
+  }
+  .eggTimer { font-size:14px; color:#00FFFF99; letter-spacing:2px; }
+  .eggReady { font-size:18px; font-weight:700; color:#FFD700; animation:glow 1s infinite alternate; }
+  @keyframes glow { from{ text-shadow:0 0 10px #FFD700; } to{ text-shadow:0 0 30px #FFD700, 0 0 60px #FF6B00; } }
+
+  /* ── GAMEOVER ── */
+  #gameoverScreen {
+    background:rgba(5,5,16,.9);
+    backdrop-filter:blur(8px);
+  }
+  .gameoverTitle {
+    font-family:'Orbitron',sans-serif; font-size:36px; font-weight:900;
+    color:#FF4444;
+    text-shadow:0 0 30px #FF4444;
+    margin-bottom:8px;
+  }
+  .finalScore { font-size:64px; font-weight:900; color:#fff; font-family:'Orbitron',sans-serif; }
+  .bestScore { font-size:14px; color:#FFD700; letter-spacing:2px; margin-bottom:24px; }
+  .coinsEarned {
+    background:rgba(255,215,0,.1); border:1px solid #FFD70044;
+    border-radius:16px; padding:12px 24px;
+    font-size:16px; color:#FFD700; margin-bottom:20px;
+  }
+  .goButtons { display:flex; gap:12px; }
+
+  /* ── BOOST/SHIELD HUD ── */
+  .activeBoost {
+    position:absolute; bottom:80px; left:50%; transform:translateX(-50%);
+    background:rgba(0,255,255,.15);
+    border:1px solid #00FFFF55;
+    border-radius:20px; padding:6px 18px;
+    font-size:13px; color:#00FFFF; letter-spacing:1px;
+    z-index:5;
+  }
+  .activeBoost.hidden { display:none; }
+
+  /* NOTIFICATION */
+  #notification {
+    position:absolute; top:80px; left:50%; transform:translateX(-50%);
+    background:linear-gradient(135deg,#7B2FBE,#00FFFF22);
+    border:1px solid #00FFFF44;
+    border-radius:16px; padding:10px 24px;
+    font-size:14px; font-weight:600;
+    color:#fff; letter-spacing:1px;
+    z-index:30; white-space:nowrap;
+    opacity:0; transition:opacity .3s;
+    pointer-events:none;
+  }
+  #notification.show { opacity:1; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:#7B2FBE88; border-radius:2px; }
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <canvas id="gameCanvas" width="400" height="700"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div id="scoreDisplay">0</div>
+    <div class="hudIcons">
+      <div class="hudIcon" id="shieldIcon" title="Shield">🛡️</div>
+      <div class="hudIcon" id="boostIcon" title="Boost">⚡</div>
+    </div>
+    <div id="boostBar"><div id="boostFill"></div></div>
+  </div>
+
+  <!-- ACTIVE BOOST LABEL -->
+  <div class="activeBoost hidden" id="boostLabel">⚡ BOOST ACTIVE</div>
+
+  <!-- NOTIFICATION -->
+  <div id="notification"></div>
+
+  <!-- HOME SCREEN -->
+  <div class="screen" id="homeScreen">
+    <div style="position:absolute;top:20px;right:20px;" class="coinDisplay">🪙 <span id="homeCoinCount">0</span></div>
+    <div class="logo">FLAPZ</div>
+    <div class="tagline">FLY IN STYLE · 2026</div>
+    <button class="bigBtn" id="playBtn">▶ PLAY</button>
+    <div class="homeNav">
+      <button class="navBtn" id="shopBtn">🛍️ SHOP</button>
+      <button class="navBtn" id="lbBtn">🏆 RANKS</button>
+      <button class="navBtn" id="eggBtn">🥚 EGG</button>
+    </div>
+    <div style="margin-top:24px; font-size:12px; color:rgba(255,255,255,.3); letter-spacing:2px;">TAP TO FLAP · DOUBLE TAP TO BOOST</div>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div class="screen hidden" id="gameoverScreen">
+    <div class="gameoverTitle">CRASHED!</div>
+    <div class="finalScore" id="finalScore">0</div>
+    <div class="bestScore">🏆 BEST: <span id="bestScoreDisplay">0</span></div>
+    <div class="coinsEarned" id="coinsEarned">+0 🪙</div>
+    <div class="goButtons">
+      <button class="bigBtn" id="retryBtn" style="padding:14px 32px;font-size:15px;">↩ RETRY</button>
+      <button class="bigBtn" id="goHomeBtn" style="padding:14px 32px;font-size:15px;background:linear-gradient(135deg,#333,#666);">🏠 HOME</button>
+    </div>
+  </div>
+
+  <!-- SHOP PANEL -->
+  <div class="panel hidden" id="shopPanel">
+    <div class="panelHeader">
+      <div class="panelTitle">🛍️ STYLE SHOP</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="coinDisplay" style="position:static;">🪙 <span id="shopCoinCount">0</span></div>
+        <button class="closeBtn" id="closeShop">✕</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="hair">💇 Hair</button>
+      <button class="tab" data-tab="shoes">👟 Shoes</button>
+      <button class="tab" data-tab="neck">📿 Neck</button>
+      <button class="tab" data-tab="trail">✨ Trail</button>
+      <button class="tab" data-tab="color">🎨 Color</button>
+    </div>
+    <div class="shopGrid" id="shopGrid"></div>
+  </div>
+
+  <!-- LEADERBOARD PANEL -->
+  <div class="panel hidden" id="lbPanel">
+    <div class="panelHeader">
+      <div class="panelTitle">🏆 LEADERBOARD</div>
+      <button class="closeBtn" id="closeLb">✕</button>
+    </div>
+    <div class="lbList" id="lbList"></div>
+  </div>
+
+  <!-- EGG PANEL -->
+  <div class="panel hidden" id="eggPanel">
+    <div class="panelHeader">
+      <div class="panelTitle">🥚 MYSTERY EGG</div>
+      <button class="closeBtn" id="closeEgg">✕</button>
+    </div>
+    <div class="eggZone">
+      <div class="eggImg" id="eggEmoji">🥚</div>
+      <div id="eggStatus" class="eggReady">TAP TO CRACK!</div>
+      <div class="eggTimer" id="eggTimerDisplay"></div>
+      <div style="font-size:13px;color:rgba(255,255,255,.4);text-align:center;padding:0 30px;">Free coins every 2 hours!<br>The egg grows the longer you wait 🐣</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  FLAPZ 2026 — Full Game Engine
+// ═══════════════════════════════════════════════════════
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = 400, H = 700;
+
+// ── SAVE STATE ──────────────────────────────────────────
+let save = JSON.parse(localStorage.getItem('flapzSave') || '{}');
+save.coins = save.coins || 0;
+save.best = save.best || 0;
+save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'default' };
+save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'default' };
+save.lastEgg = save.lastEgg || 0;
+save.shields = save.shields || 1;
+save.boosts = save.boosts || 2;
+function persist() { localStorage.setItem('flapzSave', JSON.stringify(save)); }
+
+// ── SHOP DATA ────────────────────────────────────────────
+const SHOP = {
+  hair: [
+    {id:'none',    name:'No Hair',  emoji:'🚫', price:0,    free:true},
+    {id:'crown',   name:'Crown',    emoji:'👑', price:300},
+    {id:'mohawk',  name:'Mohawk',   emoji:'🦔', price:150},
+    {id:'tophat',  name:'Top Hat',  emoji:'🎩', price:200},
+    {id:'halo',    name:'Halo',     emoji:'😇', price:400},
+    {id:'cap',     name:'Cap',      emoji:'🧢', price:100},
+  ],
+  shoes: [
+    {id:'none',    name:'Barefoot', emoji:'🚫', price:0,    free:true},
+    {id:'sneaker', name:'Sneakers', emoji:'👟', price:120},
+    {id:'boot',    name:'Boots',    emoji:'🥾', price:180},
+    {id:'heel',    name:'Heels',    emoji:'👠', price:220},
+    {id:'skate',   name:'Skates',   emoji:'⛸️', price:280},
+    {id:'rocket',  name:'Rockets',  emoji:'🚀', price:450},
+  ],
+  neck: [
+    {id:'none',    name:'Nothing',  emoji:'🚫', price:0,    free:true},
+    {id:'chain',   name:'Chain',    emoji:'⛓️', price:150},
+    {id:'gem',     name:'Gem Necklace',emoji:'💎',price:300},
+    {id:'flower',  name:'Flowers',  emoji:'💐', price:100},
+    {id:'pearl',   name:'Pearls',   emoji:'📿', price:200},
+    {id:'tie',     name:'Bow Tie',  emoji:'🎀', price:160},
+  ],
+  trail: [
+    {id:'default', name:'Sparkle',  emoji:'✨', price:0,    free:true},
+    {id:'fire',    name:'Fire',     emoji:'🔥', price:200},
+    {id:'rainbow', name:'Rainbow',  emoji:'🌈', price:350},
+    {id:'star',    name:'Stars',    emoji:'⭐', price:180},
+    {id:'snow',    name:'Snowflakes',emoji:'❄️',price:140},
+    {id:'rose',    name:'Roses',    emoji:'🌹', price:260},
+  ],
+  color: [
+    {id:'default', name:'Yellow',   emoji:'🟡', price:0,    free:true},
+    {id:'red',     name:'Crimson',  emoji:'🔴', price:100},
+    {id:'blue',    name:'Ocean',    emoji:'🔵', price:100},
+    {id:'green',   name:'Emerald',  emoji:'🟢', price:100},
+    {id:'purple',  name:'Cosmic',   emoji:'🟣', price:150},
+    {id:'black',   name:'Shadow',   emoji:'⚫', price:250},
+    {id:'white',   name:'Angel',    emoji:'⚪', price:200},
+    {id:'gold',    name:'24K Gold', emoji:'🟤', price:500},
+  ],
+};
+// Mark owned on startup
+Object.keys(SHOP).forEach(cat => {
+  SHOP[cat].forEach(item => {
+    if(item.free) { save.owned[cat] = save.owned[cat] || item.id; }
+  });
+});
+
+// ── LEADERBOARD DATA ─────────────────────────────────────
+const LB_PLAYERS = [
+  {name:'NeonKing',  score:847, emoji:'👑'},
+  {name:'SkyRider',  score:712, emoji:'🦅'},
+  {name:'FluxBird',  score:698, emoji:'🦜'},
+  {name:'CyberWing', score:654, emoji:'🤖'},
+  {name:'StarFlap',  score:601, emoji:'⭐'},
+  {name:'DragonAir', score:588, emoji:'🐉'},
+  {name:'NightOwl',  score:534, emoji:'🦉'},
+  {name:'GlowBeak',  score:499, emoji:'✨'},
+  {name:'TurboFly',  score:467, emoji:'⚡'},
+  {name:'YOU',       score: save.best, emoji:'🐦', isYou:true},
+];
+
+// ── GAME STATE ───────────────────────────────────────────
+let state = 'home'; // home | playing | dead
+let score = 0;
+let frame = 0;
+let animId;
+
+// Bird
+const bird = {
+  x:90, y:300, vy:0,
+  radius:18,
+  gravity:0.45,
+  flapPower:-8.5,
+  maxFall:10,
+  rotation:0,
+  trail:[],
+  shieldActive:false,
+  shieldTimer:0,
+  boostActive:false,
+  boostTimer:0,
+  alive:true,
+};
+
+// Pipes
+let pipes = [];
+const PIPE_W = 62;
+const PIPE_GAP = 170;
+let pipeSpeed = 3.2;
+let pipeTimer = 0;
+
+// Particles
+let particles = [];
+
+// Parallax BG layers
+let bgOffset1 = 0, bgOffset2 = 0, bgOffset3 = 0;
+
+// Stars for background
+const stars = Array.from({length:120}, () => ({
+  x: Math.random()*W, y: Math.random()*H,
+  r: Math.random()*1.8+.2, a: Math.random(),
+  speed: Math.random()*.4+.1,
+  twinkle: Math.random()*Math.PI*2
+}));
+
+// Floating orbs
+const orbs = Array.from({length:6}, (_, i) => ({
+  x: Math.random()*W, y: Math.random()*H,
+  r: 30+Math.random()*60,
+  color: ['#7B2FBE','#00FFFF','#FF00FF','#FF6B00','#FFD700','#0055FF'][i],
+  vx: (Math.random()-.5)*.3, vy: (Math.random()-.5)*.3,
+  alpha: .04+Math.random()*.06,
+}));
+
+// Coins
+let coins = [];
+let coinTimer = 0;
+
+// ── COLORS ───────────────────────────────────────────────
+const BIRD_COLORS = {
+  default:'#FFD700', red:'#FF3333', blue:'#3399FF',
+  green:'#33FF88', purple:'#CC44FF', black:'#1a1a2e',
+  white:'#f0f0ff', gold:'#FFD700'
+};
+
+// ── RENDER HELPERS ───────────────────────────────────────
+function rgbPipe(x, top, bottom) {
+  // Neon pipe
+  const grad1 = ctx.createLinearGradient(x, 0, x+PIPE_W, 0);
+  grad1.addColorStop(0,'#1a1a4e'); grad1.addColorStop(.5,'#2a2a7e'); grad1.addColorStop(1,'#1a1a4e');
+  ctx.fillStyle = grad1;
+  ctx.beginPath(); ctx.roundRect(x-2, 0, PIPE_W+4, top-20, [0,0,10,10]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(x-2, bottom+20, PIPE_W+4, H-(bottom+20), [10,10,0,0]); ctx.fill();
+  // Caps
+  const grad2 = ctx.createLinearGradient(x-8, 0, x+PIPE_W+8, 0);
+  grad2.addColorStop(0,'#00FFFF44'); grad2.addColorStop(.5,'#00FFFF'); grad2.addColorStop(1,'#00FFFF44');
+  ctx.fillStyle = grad2;
+  ctx.beginPath(); ctx.roundRect(x-8, top-28, PIPE_W+16, 28, [10,10,10,10]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(x-8, bottom, PIPE_W+16, 28, [10,10,10,10]); ctx.fill();
+  // Glow
+  ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 18;
+  ctx.strokeStyle = '#00FFFF88'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.roundRect(x-8, top-28, PIPE_W+16, 28, 10); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(x-8, bottom, PIPE_W+16, 28, 10); ctx.stroke();
+  ctx.shadowBlur = 0;
+}
+
+function drawBird() {
+  const eq = save.equipped;
+  const bx = bird.x, by = bird.y;
+  const col = BIRD_COLORS[eq.color] || '#FFD700';
+
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(bird.rotation);
+
+  // Shield
+  if(bird.shieldActive) {
+    ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 30;
+    ctx.beginPath();
+    ctx.arc(0, 0, 28, 0, Math.PI*2);
+    const sg = ctx.createRadialGradient(0,0,10,0,0,28);
+    sg.addColorStop(0,'rgba(0,255,255,0.1)'); sg.addColorStop(1,'rgba(0,255,255,0.4)');
+    ctx.fillStyle = sg; ctx.fill();
+    ctx.strokeStyle = '#00FFFF'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // Body
+  ctx.shadowColor = col; ctx.shadowBlur = 15;
+  const bg = ctx.createRadialGradient(-4,-4,2,0,0,bird.radius);
+  bg.addColorStop(0,'#fff'); bg.addColorStop(.3,col); bg.addColorStop(1,shadeColor(col,-50));
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.ellipse(0, 2, bird.radius, bird.radius-3, 0, 0, Math.PI*2); ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Wing
+  ctx.fillStyle = shadeColor(col,-30);
+  ctx.beginPath(); ctx.ellipse(-2, 4, 10, 6, -0.4, 0, Math.PI*2); ctx.fill();
+
+  // Eye
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(7, -2, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.arc(8, -2, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(9, -3, 1, 0, Math.PI*2); ctx.fill();
+
+  // Beak
+  ctx.fillStyle = '#FF8C00';
+  ctx.beginPath(); ctx.moveTo(13,-1); ctx.lineTo(21,1); ctx.lineTo(13,4); ctx.closePath(); ctx.fill();
+
+  // ACCESSORIES
+  ctx.shadowBlur = 0;
+
+  // Hair
+  const hairMap = { crown:'👑', mohawk:'🦔', tophat:'🎩', halo:'😇', cap:'🧢' };
+  if(eq.hair && hairMap[eq.hair]) {
+    ctx.font = '18px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(hairMap[eq.hair], 0, -bird.radius-2);
+  }
+
+  // Shoes (on bottom)
+  const shoeMap = { sneaker:'👟', boot:'🥾', heel:'👠', skate:'⛸️', rocket:'🚀' };
+  if(eq.shoes && shoeMap[eq.shoes]) {
+    ctx.font = '14px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(shoeMap[eq.shoes], 0, bird.radius+10);
+  }
+
+  // Necklace (at beak level)
+  const neckMap = { chain:'⛓️', gem:'💎', flower:'💐', pearl:'📿', tie:'🎀' };
+  if(eq.neck && neckMap[eq.neck]) {
+    ctx.font = '12px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(neckMap[eq.neck], 6, 8);
+  }
+
+  ctx.restore();
+}
+
+function drawTrail() {
+  const trailEmojis = { default:'✨', fire:'🔥', rainbow:'🌈', star:'⭐', snow:'❄️', rose:'🌹' };
+  const em = trailEmojis[save.equipped.trail] || '✨';
+  bird.trail.forEach((t, i) => {
+    const alpha = (i/bird.trail.length) * 0.7;
+    ctx.globalAlpha = alpha;
+    ctx.font = `${10+i*.5}px serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(em, t.x, t.y);
+  });
+  ctx.globalAlpha = 1;
+}
+
+function shadeColor(hex, pct) {
+  let r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  r = Math.min(255,Math.max(0,r+pct)); g = Math.min(255,Math.max(0,g+pct)); b = Math.min(255,Math.max(0,b+pct));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+function spawnParticles(x, y, color='#FFD700', count=8) {
+  for(let i=0; i<count; i++) {
+    const angle = Math.random()*Math.PI*2;
+    const speed = 1.5+Math.random()*3;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+      life:1, decay:.025+Math.random()*.02,
+      size:2+Math.random()*4,
+      color
+    });
+  }
+}
+
+// ── BACKGROUND RENDER ────────────────────────────────────
+function drawBG() {
+  // Deep space gradient
+  const bgGrad = ctx.createLinearGradient(0,0,0,H);
+  bgGrad.addColorStop(0,'#020210');
+  bgGrad.addColorStop(.4,'#080830');
+  bgGrad.addColorStop(.7,'#0a0520');
+  bgGrad.addColorStop(1,'#050510');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // Glowing orbs (blobs in background)
+  orbs.forEach(o => {
+    const og = ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+    og.addColorStop(0, o.color+'44');
+    og.addColorStop(1,'transparent');
+    ctx.fillStyle = og;
+    ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill();
+    o.x += o.vx; o.y += o.vy;
+    if(o.x < -o.r || o.x > W+o.r) o.vx *= -1;
+    if(o.y < -o.r || o.y > H+o.r) o.vy *= -1;
+  });
+
+  // Stars
+  stars.forEach(s => {
+    s.twinkle += .04;
+    const alpha = s.a * (.5 + .5*Math.sin(s.twinkle));
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+    if(state === 'playing') s.x -= s.speed;
+    if(s.x < 0) { s.x = W; s.y = Math.random()*H; }
+  });
+  ctx.globalAlpha = 1;
+
+  // City skyline layer 3 (far)
+  ctx.fillStyle = 'rgba(20,10,50,0.7)';
+  for(let i=0;i<14;i++) {
+    const bw = 18+((i*37)%25);
+    const bh = 60+((i*53)%120);
+    const bx = (i*30 - bgOffset3%420 + 420*2)%420;
+    ctx.fillRect(bx, H-bh-40, bw, bh);
+    // windows
+    ctx.fillStyle = 'rgba(255,220,100,0.3)';
+    for(let wi=0;wi<Math.floor(bw/8);wi++) {
+      for(let hi=0;hi<Math.floor(bh/12);hi++) {
+        if(Math.random()<.35) ctx.fillRect(bx+wi*8+1, H-bh-40+hi*12+1, 5, 8);
+      }
+    }
+    ctx.fillStyle = 'rgba(20,10,50,0.7)';
+  }
+
+  // City layer 2 (mid)
+  ctx.fillStyle = 'rgba(10,5,30,0.85)';
+  for(let i=0;i<10;i++) {
+    const bw = 30+((i*47)%40);
+    const bh = 100+((i*61)%160);
+    const bx = (i*44 - bgOffset2%440 + 440*2)%440;
+    ctx.fillRect(bx, H-bh-20, bw, bh);
+    // neon signs
+    if(i%3===0) {
+      ctx.shadowColor = '#00FFFF'; ctx.shadowBlur = 8;
+      ctx.strokeStyle = '#00FFFF44'; ctx.lineWidth = 1;
+      ctx.strokeRect(bx+5, H-bh-20+20, bw-10, 8);
+      ctx.shadowBlur = 0;
+    }
+    ctx.fillStyle = 'rgba(10,5,30,0.85)';
+  }
+
+  // Ground neon strip
+  const groundGrad = ctx.createLinearGradient(0,H-40,0,H);
+  groundGrad.addColorStop(0,'#7B2FBE55'); groundGrad.addColorStop(.3,'#7B2FBE22'); groundGrad.addColorStop(1,'transparent');
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, H-40, W, 40);
+  ctx.shadowColor = '#FF00FF'; ctx.shadowBlur = 20;
+  ctx.strokeStyle = '#FF00FF88'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0, H-40); ctx.lineTo(W, H-40); ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  if(state === 'playing') {
+    bgOffset3 += .3;
+    bgOffset2 += .8;
+  }
+}
+
+function drawCoins() {
+  coins.forEach(c => {
+    ctx.save();
+    ctx.translate(c.x, c.y);
+    const pulse = Math.sin(frame*.1 + c.phase) * .15 + 1;
+    ctx.scale(pulse, pulse);
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(0, 0, 10, 0, Math.PI*2);
+    const cg = ctx.createRadialGradient(-3,-3,1,0,0,10);
+    cg.addColorStop(0,'#fff'); cg.addColorStop(.3,'#FFD700'); cg.addColorStop(1,'#FF8C00');
+    ctx.fillStyle = cg; ctx.fill();
+    ctx.strokeStyle = '#FF8C00'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#8B4513'; ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('$', 0, 1);
+    ctx.restore();
+  });
+}
+
+// ── GAME LOOP ─────────────────────────────────────────────
+function update() {
+  frame++;
+  if(state !== 'playing') return;
+
+  // Boost meter
+  const boostPct = bird.boostActive ? Math.max(0, bird.boostTimer/120) : 1;
+  document.getElementById('boostFill').style.width = (boostPct*100)+'%';
+
+  // Bird physics
+  bird.vy += bird.gravity;
+  if(bird.vy > bird.maxFall) bird.vy = bird.maxFall;
+  bird.y += bird.vy;
+  bird.rotation = Math.min(Math.PI/3, Math.max(-Math.PI/4, bird.vy * .06));
+
+  // Trail
+  bird.trail.unshift({x: bird.x-15, y: bird.y});
+  if(bird.trail.length > 12) bird.trail.pop();
+
+  // Shield timer
+  if(bird.shieldActive) {
+    bird.shieldTimer--;
+    if(bird.shieldTimer <= 0) {
+      bird.shieldActive = false;
+      showNotif('Shield expired!');
+    }
+  }
+
+  // Boost timer
+  if(bird.boostActive) {
+    bird.boostTimer--;
+    if(bird.boostTimer <= 0) {
+      bird.boostActive = false;
+      pipeSpeed = 3.2 + Math.min(score/50, 3);
+      document.getElementById('boostLabel').classList.add('hidden');
+      showNotif('Boost ended!');
+    }
+  }
+
+  // Pipe logic
+  pipeTimer++;
+  const interval = Math.max(75, 120 - score * .5);
+  if(pipeTimer > interval) {
+    pipeTimer = 0;
+    const gapY = 120 + Math.random() * (H - 280 - 120);
+    pipes.push({ x: W+10, top: gapY, bottom: gapY + PIPE_GAP, passed: false });
+  }
+  pipes.forEach(p => {
+    p.x -= pipeSpeed;
+    if(!p.passed && p.x + PIPE_W < bird.x) {
+      p.passed = true;
+      score++;
+      document.getElementById('scoreDisplay').textContent = score;
+      spawnParticles(bird.x, bird.y, '#FFD700', 6);
+      // Speed up slightly
+      if(!bird.boostActive) pipeSpeed = 3.2 + Math.min(score/50, 3);
+    }
+  });
+  pipes = pipes.filter(p => p.x > -PIPE_W - 20);
+
+  // Coin spawning
+  coinTimer++;
+  if(coinTimer > 90) {
+    coinTimer = 0;
+    if(Math.random() < .6) {
+      coins.push({
+        x: W+10,
+        y: 100 + Math.random()*(H-220),
+        phase: Math.random()*Math.PI*2
+      });
+    }
+  }
+  coins.forEach(c => c.x -= pipeSpeed * .7);
+  // Coin collection
+  coins = coins.filter(c => {
+    if(Math.hypot(c.x - bird.x, c.y - bird.y) < 22) {
+      save.coins++;
+      persist();
+      updateCoinDisplays();
+      spawnParticles(c.x, c.y, '#FFD700', 10);
+      return false;
+    }
+    return c.x > -20;
+  });
+
+  // Particles
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += .1;
+    p.life -= p.decay;
+  });
+  particles = particles.filter(p => p.life > 0);
+
+  // Collision
+  checkCollision();
+
+  // Ground/ceiling
+  if(bird.y + bird.radius > H - 40) { bird.y = H - 40 - bird.radius; die(); }
+  if(bird.y - bird.radius < 0) { bird.y = bird.radius; bird.vy = 0; }
+}
+
+function checkCollision() {
+  for(const p of pipes) {
+    const bx = bird.x, by = bird.y, br = bird.radius - 3;
+    const hit = bx+br > p.x+4 && bx-br < p.x+PIPE_W-4 &&
+                (by-br < p.top-20 || by+br > p.bottom+6);
+    if(hit) {
+      if(bird.shieldActive) {
+        bird.shieldActive = false;
+        bird.shieldTimer = 0;
+        spawnParticles(bird.x, bird.y, '#00FFFF', 20);
+        showNotif('🛡️ Shield blocked!');
+        // push pipe away
+        p.x = bird.x - PIPE_W - 10;
+      } else {
+        spawnParticles(bird.x, bird.y, '#FF4444', 20);
+        die();
+      }
+      return;
+    }
+  }
+}
+
+function die() {
+  if(!bird.alive) return;
+  bird.alive = false;
+  state = 'dead';
+  const earned = Math.floor(score * 1.5);
+  save.coins += earned;
+  if(score > save.best) save.best = score;
+  persist();
+  updateCoinDisplays();
+  setTimeout(() => showGameover(score, earned), 600);
+}
+
+function draw() {
+  ctx.clearRect(0,0,W,H);
+  drawBG();
+  // Pipes
+  pipes.forEach(p => { ctx.save(); rgbPipe(p.x, p.top, p.bottom); ctx.restore(); });
+  // Coins
+  drawCoins();
+  // Trail
+  drawTrail();
+  // Bird
+  drawBird();
+  // Particles
+  particles.forEach(p => {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.shadowColor = p.color; ctx.shadowBlur = 6;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+  });
+  ctx.globalAlpha = 1;
+}
+
+function loop() {
+  update();
+  draw();
+  animId = requestAnimationFrame(loop);
+}
+
+// ── INPUT ─────────────────────────────────────────────────
+let lastTap = 0;
+function flap() {
+  if(state !== 'playing' || !bird.alive) return;
+  const now = Date.now();
+  if(now - lastTap < 250 && save.boosts > 0 && !bird.boostActive) {
+    // Double tap = boost
+    bird.boostActive = true;
+    bird.boostTimer = 120;
+    bird.vy = -10;
+    save.boosts--;
+    persist();
+    pipeSpeed = (3.2 + Math.min(score/50, 3)) * 1.7;
+    document.getElementById('boostLabel').classList.remove('hidden');
+    showNotif('⚡ BOOST!');
+    spawnParticles(bird.x, bird.y, '#00FFFF', 15);
+  } else {
+    bird.vy = bird.flapPower;
+    spawnParticles(bird.x - 10, bird.y + 10, BIRD_COLORS[save.equipped.color] || '#FFD700', 4);
+  }
+  lastTap = now;
+}
+
+canvas.addEventListener('click', flap);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, {passive:false});
+document.addEventListener('keydown', e => { if(e.code==='Space') { e.preventDefault(); flap(); } });
+
+// Shield button
+document.getElementById('shieldIcon').addEventListener('click', e => {
+  e.stopPropagation();
+  if(state !== 'playing') return;
+  if(save.shields > 0 && !bird.shieldActive) {
+    bird.shieldActive = true;
+    bird.shieldTimer = 300;
+    save.shields--;
+    persist();
+    showNotif('🛡️ Shield ON!');
+    spawnParticles(bird.x, bird.y, '#00FFFF', 12);
+  } else if(save.shields <= 0) {
+    showNotif('No shields left!');
+  }
+});
+
+document.getElementById('boostIcon').addEventListener('click', e => {
+  e.stopPropagation();
+  if(state !== 'playing') return;
+  if(save.boosts > 0 && !bird.boostActive) {
+    bird.boostActive = true;
+    bird.boostTimer = 120;
+    bird.vy = -10;
+    save.boosts--;
+    persist();
+    pipeSpeed = (3.2 + Math.min(score/50, 3)) * 1.7;
+    document.getElementById('boostLabel').classList.remove('hidden');
+    showNotif('⚡ BOOST!');
+  } else if(save.boosts <= 0) {
+    showNotif('No boosts left!');
+  }
+});
+
+// ── SCREENS ───────────────────────────────────────────────
+function showHome() {
+  state = 'home';
+  document.getElementById('homeScreen').classList.remove('hidden');
+  document.getElementById('gameoverScreen').classList.add('hidden');
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('boostLabel').classList.add('hidden');
+  cancelAnimationFrame(animId);
+  // Draw static bg
+  loop();
+}
+
+function startGame() {
+  state = 'playing';
+  score = 0;
+  frame = 0;
+  pipes = [];
+  coins = [];
+  particles = [];
+  pipeTimer = 0;
+  coinTimer = 0;
+  pipeSpeed = 3.2;
+  bird.y = 300; bird.vy = 0; bird.rotation = 0;
+  bird.trail = [];
+  bird.shieldActive = false; bird.shieldTimer = 0;
+  bird.boostActive = false; bird.boostTimer = 0;
+  bird.alive = true;
+  document.getElementById('homeScreen').classList.add('hidden');
+  document.getElementById('gameoverScreen').classList.add('hidden');
+  document.getElementById('hud').classList.remove('hidden');
+  document.getElementById('scoreDisplay').textContent = '0';
+  cancelAnimationFrame(animId);
+  loop();
+}
+
+function showGameover(sc, earned) {
+  document.getElementById('gameoverScreen').classList.remove('hidden');
+  document.getElementById('hud').classList.add('hidden');
+  document.getElementById('finalScore').textContent = sc;
+  document.getElementById('bestScoreDisplay').textContent = save.best;
+  document.getElementById('coinsEarned').textContent = `+${earned} 🪙 earned`;
+  // Update LB
+  LB_PLAYERS.find(p => p.isYou).score = save.best;
+}
+
+// ── NAV BUTTONS ───────────────────────────────────────────
+document.getElementById('playBtn').addEventListener('click', startGame);
+document.getElementById('retryBtn').addEventListener('click', startGame);
+document.getElementById('goHomeBtn').addEventListener('click', () => {
+  document.getElementById('gameoverScreen').classList.add('hidden');
+  showHome();
+});
+
+document.getElementById('shopBtn').addEventListener('click', () => openShop());
+document.getElementById('lbBtn').addEventListener('click', () => openLb());
+document.getElementById('eggBtn').addEventListener('click', () => openEgg());
+document.getElementById('closeShop').addEventListener('click', () => document.getElementById('shopPanel').classList.add('hidden'));
+document.getElementById('closeLb').addEventListener('click', () => document.getElementById('lbPanel').classList.add('hidden'));
+document.getElementById('closeEgg').addEventListener('click', () => document.getElementById('eggPanel').classList.add('hidden'));
+
+// ── SHOP ──────────────────────────────────────────────────
+let currentTab = 'hair';
+function openShop() {
+  document.getElementById('shopPanel').classList.remove('hidden');
+  renderShopTab('hair');
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === 'hair');
+  });
+}
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    currentTab = t.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    renderShopTab(currentTab);
+  });
+});
+
+function renderShopTab(cat) {
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+  const items = SHOP[cat];
+  // Determine what's owned in this category
+  const ownedArr = Array.isArray(save.owned[cat]) ? save.owned[cat] : [save.owned[cat]];
+  items.forEach(item => {
+    const isOwned = item.free || ownedArr.includes(item.id) || save.owned[cat+'_'+item.id];
+    const isEquipped = save.equipped[cat] === item.id;
+    const div = document.createElement('div');
+    div.className = 'shopItem' + (isEquipped?' equipped':isOwned?' owned':'');
+    div.innerHTML = `
+      <span class="itemEmoji">${item.emoji}</span>
+      <div class="itemName">${item.name}</div>
+      <div class="itemPrice">${isOwned?'<span style="color:#00FF99">✓ Owned</span>':'🪙 '+item.price}</div>
+      ${isEquipped?'<div class="equippedBadge">ON</div>':''}
+      ${isOwned&&!isEquipped?'<div class="ownedBadge">EQUIP</div>':''}
+    `;
+    div.addEventListener('click', () => {
+      if(isEquipped) return;
+      if(isOwned || item.free) {
+        save.equipped[cat] = item.id;
+        persist();
+        renderShopTab(cat);
+        showNotif('Equipped '+item.name+'!');
+      } else {
+        if(save.coins >= item.price) {
+          save.coins -= item.price;
+          // Mark owned
+          if(!save.owned[cat+'_'+item.id]) save.owned[cat+'_'+item.id] = true;
+          save.equipped[cat] = item.id;
+          persist();
+          updateCoinDisplays();
+          renderShopTab(cat);
+          showNotif('Bought & equipped '+item.name+'!');
+        } else {
+          showNotif('Not enough coins! 🪙');
+        }
+      }
+    });
+    grid.appendChild(div);
+  });
+  updateCoinDisplays();
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────
+function openLb() {
+  document.getElementById('lbPanel').classList.remove('hidden');
+  LB_PLAYERS.find(p=>p.isYou).score = save.best;
+  const sorted = [...LB_PLAYERS].sort((a,b)=>b.score-a.score);
+  const list = document.getElementById('lbList');
+  list.innerHTML = '';
+  sorted.forEach((p,i) => {
+    const row = document.createElement('div');
+    row.className = 'lbRow' + (p.isYou?' lbYou':'');
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const rankIcon = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
+    row.innerHTML = `
+      <div class="lbRank ${rankClass}">${rankIcon}</div>
+      <div class="lbAvatar">${p.emoji}</div>
+      <div class="lbInfo">
+        <div class="lbName">${p.name}${p.isYou?' (You)':''}</div>
+        <div class="lbScore">Best: ${p.score}</div>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+// ── EGG SYSTEM ────────────────────────────────────────────
+const EGG_COOLDOWN = 2 * 60 * 60 * 1000; // 2 hours
+function openEgg() {
+  document.getElementById('eggPanel').classList.remove('hidden');
+  updateEggUI();
+}
+function updateEggUI() {
+  const now = Date.now();
+  const elapsed = now - save.lastEgg;
+  const ready = elapsed >= EGG_COOLDOWN;
+  const eggEl = document.getElementById('eggEmoji');
+  const statusEl = document.getElementById('eggStatus');
+  const timerEl = document.getElementById('eggTimerDisplay');
+  if(ready) {
+    eggEl.textContent = '🥚';
+    statusEl.className = 'eggReady';
+    statusEl.textContent = 'TAP TO CRACK!';
+    timerEl.textContent = '';
+    eggEl.onclick = crackEgg;
+  } else {
+    const remain = EGG_COOLDOWN - elapsed;
+    const h = Math.floor(remain/3600000);
+    const m = Math.floor((remain%3600000)/60000);
+    const s = Math.floor((remain%60000)/1000);
+    eggEl.textContent = '🪺';
+    statusEl.className = 'eggTimer';
+    statusEl.textContent = 'INCUBATING...';
+    timerEl.textContent = `${h}h ${m}m ${s}s remaining`;
+    eggEl.onclick = null;
+    setTimeout(updateEggUI, 1000);
+  }
+}
+function crackEgg() {
+  const bonus = 50 + Math.floor(Math.random()*200);
+  save.coins += bonus;
+  save.lastEgg = Date.now();
+  persist();
+  updateCoinDisplays();
+  document.getElementById('eggEmoji').textContent = '🐣';
+  document.getElementById('eggStatus').textContent = `+${bonus} 🪙 COINS!`;
+  document.getElementById('eggTimerDisplay').textContent = 'Next egg in 2 hours';
+  document.getElementById('eggEmoji').onclick = null;
+  showNotif(`🥚 Cracked! +${bonus} coins!`);
+  setTimeout(updateEggUI, 3000);
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function updateCoinDisplays() {
+  document.getElementById('homeCoinCount').textContent = save.coins;
+  document.getElementById('shopCoinCount').textContent = save.coins;
+}
+let notifTimeout;
+function showNotif(msg) {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimeout);
+  notifTimeout = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ── INIT ──────────────────────────────────────────────────
+updateCoinDisplays();
+showHome();
+</script>
+</body>
+</html>
