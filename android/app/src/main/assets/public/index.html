@@ -3248,28 +3248,78 @@ function renderStore() {
   });
 }
 // ── LEADERBOARD ───────────────────────────────────────────
-function openLb() {
-Capacitor.Plugins.Leaderboard.showLeaderboard();
-  document.getElementById('lbPanel').classList.remove('hidden');
-  LB_PLAYERS.find(p=>p.isYou).score = save.best;
-  const sorted = [...LB_PLAYERS].sort((a,b)=>b.score-a.score);
+async function openLb() {
+  const panel = document.getElementById('lbPanel');
   const list = document.getElementById('lbList');
-  list.innerHTML = '';
-  sorted.forEach((p,i) => {
-    const row = document.createElement('div');
-    row.className = 'lbRow' + (p.isYou?' lbYou':'');
-    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-    const rankIcon = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
-    row.innerHTML = `
-      <div class="lbRank ${rankClass}">${rankIcon}</div>
-      <div class="lbAvatar">${p.emoji}</div>
+
+  panel.classList.remove('hidden');
+  list.innerHTML = `
+    <div class="lbRow">
+      <div class="lbAvatar">⏳</div>
       <div class="lbInfo">
-        <div class="lbName">${p.name}${p.isYou?' (You)':''}</div>
-        <div class="lbScore">Best: ${p.score}</div>
+        <div class="lbName">Loading Google Play scores...</div>
+      </div>
+    </div>
+  `;
+
+  try {
+    const Leaderboard = window.Capacitor?.Plugins?.Leaderboard;
+
+    if (!Leaderboard || !Leaderboard.loadScores) {
+      throw new Error('Google Play leaderboard is unavailable');
+    }
+
+    const result = await Leaderboard.loadScores();
+    const players = Array.isArray(result?.scores) ? result.scores : [];
+
+    list.innerHTML = '';
+
+    if (players.length === 0) {
+      list.innerHTML = `
+        <div class="lbRow">
+          <div class="lbAvatar">🏆</div>
+          <div class="lbInfo">
+            <div class="lbName">No scores yet</div>
+            <div class="lbScore">Be the first to set a score!</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    players.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'lbRow';
+
+      const rank = Number(p.rank) || (i + 1);
+      const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+      const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '#' + rank;
+
+      row.innerHTML = `
+        <div class="lbRank ${rankClass}">${rankIcon}</div>
+        <div class="lbAvatar">🐦</div>
+        <div class="lbInfo">
+          <div class="lbName">${p.name || 'Player'}</div>
+          <div class="lbScore">Best: ${Number(p.score) || 0}</div>
+        </div>
+      `;
+
+      list.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error('Leaderboard load failed:', error);
+
+    list.innerHTML = `
+      <div class="lbRow">
+        <div class="lbAvatar">⚠️</div>
+        <div class="lbInfo">
+          <div class="lbName">Could not load leaderboard</div>
+          <div class="lbScore">Check your connection and try again.</div>
+        </div>
       </div>
     `;
-    list.appendChild(row);
-  });
+  }
 }
 
 // ── EGG SYSTEM ────────────────────────────────────────────
