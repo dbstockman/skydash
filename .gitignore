@@ -1,0 +1,17 @@
+node_modules/
+android/.gradle/
+android/app/build/
+android/build/
+.vscode/
+*.jks
+*.keystore
+key.properties
+android/platforms/
+android/platforms/
+android/platform-tools/
+android/licenses/
+android/cmdline-tools/
+android/platforms/
+android/platform-tools/
+android/licenses/
+android/cmdline-tools/

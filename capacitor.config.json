@@ -1,0 +1,15 @@
+{
+  "appId": "com.nexoragames.skydash",
+  "appName": "SkyDash",
+  "webDir": "public",
+  "plugins": {
+    "AdMob": {
+      "appId": "ca-app-pub-3940256099942544~3347511713",
+      "initializeForTesting": true,
+      "testingDevices": [],
+      "tagForChildDirectedTreatment": false,
+      "tagForUnderAgeOfConsent": false,
+      "maxAdContentRating": "G"
+    }
+  }
+}

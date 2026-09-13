@@ -151,7 +151,8 @@ z-index: 51;
   #hud {
     position:absolute; top:0; left:0; right:0;
     padding:16px 20px;
-    display:flex; align-items:center; justify-content:space-between;
+   justify-content:flex-start;
+  gap: 20px;
     z-index:5; pointer-events:none;
   }
   #hud.hidden { display:none; }
@@ -171,7 +172,9 @@ z-index: 51;
     border-radius:4px;
     transition:width .1s;
   }
-  .hudIcons { display:flex; gap:8px; align-items:center; }
+  .hudIcons {
+  position: static;
+}
   .hudIcon {
     width:36px; height:36px;
     border-radius:10px;
@@ -182,40 +185,17 @@ z-index: 51;
     pointer-events:all;
     cursor:pointer;
   }
-#hud {
-  display: block !important;
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 99999 !important;
-  pointer-events: none;
-}
-
-#shieldIcon {
-  position: absolute !important;
-  left: 18px !important;
-  bottom: 90px !important;
-  top: auto !important;
-  pointer-events: auto;
+ #shieldIcon {
+  position: fixed !important;
+  top: 250px;
+  left: 20px;
 }
 
 #boostIcon {
-  position: absolute !important;
-  right: 18px !important;
-  bottom: 90px !important;
-  left: auto !important;
-  top: auto !important;
-  pointer-events: auto;
+  position: fixed !important;
+  top: 390px;
+  left: 20px;
 }
-
-#scoreDisplay {
-  position: absolute !important;
-  top: 20px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  z-index: 99999 !important;
-}
-
-
   /* ── PANELS (Shop / Leaderboard / Egg) ── */
   .panel {
     position:absolute; inset:0;
@@ -476,6 +456,11 @@ z-index: 51;
   ::-webkit-scrollbar { width:4px; }
   ::-webkit-scrollbar-track { background:transparent; }
   ::-webkit-scrollbar-thumb { background:#7B2FBE88; border-radius:2px; }
+  .forceHide {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
 </style>
 </head>
 <body>
@@ -483,9 +468,10 @@ z-index: 51;
   <canvas id="gameCanvas" width="400" height="700"></canvas>
 
   <!-- HUD -->
-  <div id="hud">
-     <div class="hudIcon" id="shieldIcon" title="Shield" style="position:absolute; left:15px; top:15px; z-index:99999;">
-<div class="hudIcon" id="boostIcon" title="Boost" style="position:absolute; left:15px; top:65px; z-index:99999;">
+  <div id="hud" class="hidden">
+    <div id="scoreDisplay">0</div>
+<div class="hudIcon" id="shieldIcon" title="Shield" style="position:fixed !important; top:250px !important; left:20px !important; z-index:99999 !important;">🛡️</div>
+<div class="hudIcon" id="boostIcon" title="Boost" style="position:fixed !important; top:390px !important; left:20px !important; z-index:99999 !important;">⚡</div>
     <div id="boostBar"><div id="boostFill"></div></div>
   </div>
 
@@ -572,23 +558,13 @@ style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(1
   <div id="storeGrid" class="shopGrid"></div>
 </div>
   <!-- LEADERBOARD PANEL -->
- <div class="panel hidden" id="lbPanel">
-  <div class="panelHeader">
-    <div class="panelTitle">🏆 LEADERBOARD</div>
-    <button class="closeBtn" id="closeLb">×</button>
+  <div class="panel hidden" id="lbPanel">
+    <div class="panelHeader">
+      <div class="panelTitle">🏆 LEADERBOARD</div>
+      <button class="closeBtn" id="closeLb">✕</button>
+    </div>
+    <div class="lbList" id="lbList"></div>
   </div>
-
-  <div class="tabs">
-    <button class="tab active" id="weeklyTab">WEEKLY</button>
-    <button class="tab" id="allTimeTab">ALL-TIME</button>
-  </div>
-
-  <div style="text-align:center; font-size:13px; color:#00e5ff; letter-spacing:2px; padding-bottom:10px;">
-    TOP PLAYERS • YOUR RANK
-  </div>
-
-  <div class="lbList" id="lbList"></div>
-</div>
 
   <!-- EGG PANEL -->
   <div class="panel hidden" id="eggPanel">
@@ -613,46 +589,15 @@ const coinSound = new Audio('https://www.orangefreesounds.com/wp-content/uploads
 coinSound.volume = 1.0;
 const boostSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-fast-rocket-whoosh-1714.mp3');
 const crashSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3');
-const reviveAdBtn = document.getElementById("reviveAdBtn");
-const REVIVE_AD_ID = "ca-app-pub-3940256099942544/5224354917";
+const AdMob = window.Capacitor?.Plugins?.AdMobPlus || window.Capacitor?.Plugins?.AdMob;
 
-async function revivePlayer() {
-  gameOverScreen.classList.add("hidden");
-  gameRunning = true;
-  gameOver = false;
-  paused = false;
-  requestAnimationFrame(gameLoop);
+
+if (AdMob) {
+  AdMob.start({
+    appMuted: false,
+    appVolume: 1.0
+  });
 }
-
-reviveAdBtn.addEventListener("click", async () => {
-  try {
-    const AdMob = window.Capacitor?.Plugins?.AdMob;
-
-if (!AdMob) {
-  alert("AdMob only works in installed Android app.");
-  return;
-}
-
-await AdMob.start();
-
-await AdMob.prepareInterstitial({
-  adId: "ca-app-pub-3940256099942544/1033173712",
-  isTesting: true
-});
-
-await AdMob.showInterstitial();
-
-setTimeout(() => {
-  revivePlayer();
-}, 1500);
-
-  } catch (error) {
-    console.error("Rewarded ad failed:", error);
-    alert("Ad failed: " + JSON.stringify(error));
-  }
-});
-
-
 // ═══════════════════════════════════════════════════════
 //  SKYDASH 2026 — Full Game Engine
 // ═══════════════════════════════════════════════════════
@@ -836,8 +781,8 @@ const LB_PLAYERS = [
 
 // ── GAME STATE ───────────────────────────────────────────
 let state = 'home'; // home | playing | dead
-let reviveUsed = false;
 let score = 0;
+let reviveUsed = false;
 let frame = 0;
 let animId;
 
@@ -1183,17 +1128,16 @@ function update() {
   }
   pipes.forEach(p => {
     p.x -= pipeSpeed;
-    if(!p.passed && p.x + PIPE_W < bird.x) 
-    {
+    if(!p.passed && p.x + PIPE_W < bird.x) {
       p.passed = true;
       score++;
-    const scoreEl = document.getElementById('scoreDisplay');
-  if (scoreEl) scoreEl.textContent = score;
+      document.getElementById('scoreDisplay').textContent = score;
+      spawnParticles(bird.x, bird.y, '#FFD700', 6);
       // Speed up slightly
-   pipeSpeed = 3.2;
+      if(!bird.boostActive) pipeSpeed = 3.2 + Math.min(score/50, 3);
     }
   });
-  pipes = pipes.filter(p => p.x > -PIPE_W - 20 && p.x < W + 100);
+  pipes = pipes.filter(p => p.x > -PIPE_W - 20);
 
   // Coin spawning
   coinTimer++;
@@ -1297,33 +1241,35 @@ function draw() {
   ctx.globalAlpha = 1;
 }
 
-function loop(timestamp = 0) {
-  if (!loop.lastFrame) loop.lastFrame = timestamp;
-
-  const elapsed = timestamp - loop.lastFrame;
-
-  if (elapsed >= 8.33) {
-    loop.lastFrame = timestamp;
-    update();
-    draw();
-  }
-
+function loop() {
+  update();
+  draw();
   animId = requestAnimationFrame(loop);
 }
 
 // ── INPUT ─────────────────────────────────────────────────
 let lastTap = 0;
 function flap() {
-  if (state !== 'playing' || !bird.alive) return;
-
-  bird.vy = bird.flapPower;
-  spawnParticles(
-    bird.x - 10,
-    bird.y + 10,
-    BIRD_COLORS[save.equipped.color] || '#FFD700',
-    8
-  );
+  if(state !== 'playing' || !bird.alive) return;
+  const now = Date.now();
+  if(now - lastTap < 250 && save.boosts > 0 && !bird.boostActive) {
+    // Double tap = boost
+    bird.boostActive = true;
+    bird.boostTimer = 120;
+    bird.vy = -10;
+    save.boosts--;
+    persist();
+    pipeSpeed = (3.2 + Math.min(score/50, 3)) * 1.7;
+    document.getElementById('boostLabel').classList.remove('hidden');
+    showNotif('⚡ BOOST!');
+    spawnParticles(bird.x, bird.y, '#00FFFF', 15);
+  } else {
+    bird.vy = bird.flapPower;
+    spawnParticles(bird.x - 10, bird.y + 10, BIRD_COLORS[save.equipped.color] || '#FFD700', 4);
+  }
+  lastTap = now;
 }
+
 canvas.addEventListener('click', e => {
   if (e.target !== canvas) return;
   flap();
@@ -1383,7 +1329,9 @@ function showHome() {
 
 function startGame() {
   state = 'playing';
+  document.getElementById('reviveAdBtn').classList.remove('forceHide');
   reviveUsed = false;
+  window.revivedThisRun = false;
   score = 0;
   frame = 0;
   pipes = [];
@@ -1401,26 +1349,19 @@ function startGame() {
   document.getElementById('gameoverScreen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
   document.getElementById('scoreDisplay').textContent = '0';
-  document.getElementById('scoreDisplay').style.display = 'block';
-document.getElementById('coinCount').style.display = 'block';
-document.getElementById('gemCount').style.display = 'block';
-  document.getElementById('coinCount').textContent = save.coins;
-document.getElementById('gemCount').textContent = save.gems;
-document.getElementById('shieldCount').textContent = save.shields || 0;
-document.getElementById('boostCount').textContent = save.boosts || 0;
   cancelAnimationFrame(animId);
   loop();
 }
 function revivePlayer() {
-    if (reviveUsed) return;
-
-    state = 'playing';
     reviveUsed = true;
+    window.revivedThisRun = true;
+    document.getElementById('reviveAdBtn').style.display = 'none';
+    state = 'playing';
 
-    bird.y = 300;
-    bird.vy = 0;
-    bird.rotation = 0;
-    bird.alive = true;
+  bird.y = 300;
+  bird.vy = 0;
+  bird.rotation = 0;
+  bird.alive = true;
 
   document.getElementById('gameoverScreen').classList.add('hidden');
   document.getElementById('hud').classList.remove('hidden');
@@ -1429,28 +1370,17 @@ function revivePlayer() {
   loop();
 }
 function showGameover(sc, earned) {
-  document.getElementById('coinsEarned').textContent = `+${earned} 🪙 earned`;
+  alert("reviveUsed = " + reviveUsed + " / window = " + window.revivedThisRun);
+if (reviveUsed || window.revivedThisRun) {
+    document.getElementById('reviveAdBtn').classList.add('forceHide');
+} else {
+    document.getElementById('reviveAdBtn').classList.remove('forceHide');
+}
   document.getElementById('gameoverScreen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
-  const reviveBtn = document.getElementById('reviveAdBtn');
-const gemsReviveBtn = document.getElementById('reviveGemBtn');
-
-if (reviveUsed) {
-    reviveBtn.disabled = true;
-    gemsReviveBtn.disabled = true;
-
-    reviveBtn.style.display = 'none';
-    gemsReviveBtn.style.display = 'none';
-} else {
-    reviveBtn.disabled = false;
-    gemsReviveBtn.disabled = false;
-
-    reviveBtn.style.display = 'block';
-    gemsReviveBtn.style.display = 'block';
-}
   document.getElementById('finalScore').textContent = sc;
   document.getElementById('bestScoreDisplay').textContent = save.best;
-  //document.getElementById('coinsEarned').textContent = `+${earned} 🪙 earned`;
+  document.getElementById('coinsEarned').textContent = `+${earned} 🪙 earned`;
   // Update LB
   LB_PLAYERS.find(p => p.isYou).score = save.best;
 }
@@ -1459,24 +1389,57 @@ if (reviveUsed) {
 document.getElementById('playBtn').addEventListener('click', startGame);
 document.getElementById('retryBtn').addEventListener('click', startGame);
 document.getElementById('reviveGemBtn').addEventListener('click', () => {
+  if (reviveUsed) return;
   if (gems >= 25) {
     gems -= 25;
     updateCurrency();
     document.getElementById('gameoverScreen').classList.add('hidden');
+    reviveUsed = true;
     revivePlayer();
   } else {
     alert('Not enough gems!');
   }
 });
+let rewardEarned = false;
 
-document.getElementById('reviveAdBtn').addEventListener('click', () => {
+document.getElementById("reviveAdBtn").addEventListener("click", async () => {
+  try {
+    if (reviveUsed) return
+    rewardEarned = false;
 
-    if (reviveUsed) {
-        return;
-    }
+await AdMob.adCreate({
+  id: 1,
+  cls: "RewardedAd",
+  adUnitId: "ca-app-pub-3940256099942544/5224354917"
+});
+
+await AdMob.adLoad({ id: 1 });
+await AdMob.adShow({ id: 1 });
+
+
+  } catch (err) {
+    console.error("Reward ad failed:", err);
+    alert("Ad failed: " + (err.message || JSON.stringify(err)));
+  }
+});
+
+AdMob.addListener('rewarded.reward', () => {
+  console.log("✅ Reward earned");
+  rewardEarned = true;
+});
+
+AdMob.addListener('rewarded.dismiss', () => {
+  console.log("Ad dismissed. rewardEarned =", rewardEarned);
+
+if (rewardEarned && !reviveUsed) {
+    rewardEarned = false;
+    reviveUsed = true;
+
+    const gameOver = document.getElementById("gameOverScreen") || document.querySelector(".game-over");
+    if (gameOver) gameOver.classList.add("hidden");
 
     revivePlayer();
-
+}
 });
 
 document.getElementById('goHomeBtn').addEventListener('click', () => {
@@ -1621,61 +1584,26 @@ function renderStore() {
 // ── LEADERBOARD ───────────────────────────────────────────
 function openLb() {
   document.getElementById('lbPanel').classList.remove('hidden');
-
-  LB_PLAYERS.find(p => p.isYou).score = save.best;
-
-  const sorted = [...LB_PLAYERS].sort((a,b) => b.score - a.score);
+  LB_PLAYERS.find(p=>p.isYou).score = save.best;
+  const sorted = [...LB_PLAYERS].sort((a,b)=>b.score-a.score);
   const list = document.getElementById('lbList');
   list.innerHTML = '';
-
-  const youIndex = sorted.findIndex(p => p.isYou);
-  const youRank = youIndex + 1;
-
-  const title = document.createElement('div');
-  title.style.cssText = 'color:#27e6ff;font-size:14px;letter-spacing:2px;margin:6px 0 16px;text-align:center;';
-  title.innerHTML = `TOP PLAYERS • YOUR RANK #${youRank}`;
-  list.appendChild(title);
-
-  sorted.filter(p => !p.isYou).slice(0, 100).forEach((p,i) => {
+  sorted.forEach((p,i) => {
     const row = document.createElement('div');
-    row.className = 'lbRow';
-
+    row.className = 'lbRow' + (p.isYou?' lbYou':'');
     const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
     const rankIcon = i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1);
-
     row.innerHTML = `
       <div class="lbRank ${rankClass}">${rankIcon}</div>
       <div class="lbAvatar">${p.emoji}</div>
       <div class="lbInfo">
-        <div class="lbName">${p.name}</div>
+        <div class="lbName">${p.name}${p.isYou?' (You)':''}</div>
         <div class="lbScore">Best: ${p.score}</div>
       </div>
     `;
-
     list.appendChild(row);
   });
-
-  const you = sorted.find(p => p.isYou);
-
-  const youTitle = document.createElement('div');
-  youTitle.style.cssText = 'color:#ffd700;font-size:14px;letter-spacing:2px;margin:18px 0 10px;text-align:center;';
-  youTitle.innerHTML = `YOUR POSITION`;
-  list.appendChild(youTitle);
-
-  const youRow = document.createElement('div');
-  youRow.className = 'lbRow lbYou';
-  youRow.innerHTML = `
-    <div class="lbRank gold">#${youRank}</div>
-    <div class="lbAvatar">${you.emoji}</div>
-    <div class="lbInfo">
-      <div class="lbName">YOU</div>
-      <div class="lbScore">Best: ${you.score}</div>
-    </div>
-  `;
-  list.appendChild(youRow);
 }
-
-
 
 // ── EGG SYSTEM ────────────────────────────────────────────
 const EGG_COOLDOWN = 2 * 60 * 60 * 1000; // 2 hours
