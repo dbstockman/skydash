@@ -10,107 +10,79 @@ import com.google.android.gms.games.PlayGames;
 
 @CapacitorPlugin(name = "Leaderboard")
 public class LeaderboardPlugin extends Plugin {
-
     private static final String TAG = "SkyDashGPGS";
-    private static final String LEADERBOARD_ID = "Cgk1Mr5rcEQEAIQAw";
+    private static final String TEST_ID = "Cgk1Mr5rcEQEAIQAw";
 
     @PluginMethod
     public void submitScore(PluginCall call) {
-        long gameScore = call.getLong("score", 0L);
-        Log.e(TAG, "METADATA DIAGNOSTIC START | gameScore=" + gameScore + " | expectedLeaderboard=" + LEADERBOARD_ID);
-
-        PlayGames.getGamesSignInClient(getActivity())
-                .isAuthenticated()
-                .addOnCompleteListener(authTask -> {
-                    if (authTask.isSuccessful()
-                            && authTask.getResult() != null
-                            && authTask.getResult().isAuthenticated()) {
-                        logCurrentPlayer();
-                        loadLeaderboardMetadata(call);
-                    } else {
-                        PlayGames.getGamesSignInClient(getActivity())
-                                .signIn()
-                                .addOnCompleteListener(signInTask -> {
-                                    if (signInTask.isSuccessful()
-                                            && signInTask.getResult() != null
-                                            && signInTask.getResult().isAuthenticated()) {
-                                        logCurrentPlayer();
-                                        loadLeaderboardMetadata(call);
-                                    } else {
-                                        Exception error = signInTask.getException();
-                                        logFailure("SIGN IN FAILED", error);
-                                        call.reject("Google Play Games sign-in failed", error);
-                                    }
-                                });
-                    }
-                });
+        PlayGames.getGamesSignInClient(getActivity()).isAuthenticated().addOnCompleteListener(auth -> {
+            if (auth.isSuccessful() && auth.getResult() != null && auth.getResult().isAuthenticated()) {
+                testOtherLeaderboard(call);
+            } else {
+                call.reject("Not authenticated");
+            }
+        });
     }
 
-    private void loadLeaderboardMetadata(PluginCall call) {
-        Log.e(TAG, "LOAD LEADERBOARD METADATA START");
-
-        PlayGames.getLeaderboardsClient(getActivity())
-                .loadLeaderboardMetadata(true)
+    private void testOtherLeaderboard(PluginCall call) {
+        PlayGames.getLeaderboardsClient(getActivity()).loadLeaderboardMetadata(true)
                 .addOnSuccessListener(result -> {
-                    int count = result.get().getCount();
-                    Log.e(TAG, "LOAD LEADERBOARD METADATA SUCCESS | count=" + count);
-
-                    boolean expectedFound = false;
-                    for (int i = 0; i < count; i++) {
-                        String id = result.get().get(i).getLeaderboardId();
-                        String name = result.get().get(i).getDisplayName();
-                        Log.e(TAG, "LEADERBOARD FOUND | id=" + id + " | name=" + name);
-                        if (LEADERBOARD_ID.equals(id)) expectedFound = true;
+                    String otherId = null;
+                    String otherName = null;
+                    try {
+                        int count = result.get().getCount();
+                        for (int i = 0; i < count; i++) {
+                            String id = result.get().get(i).getLeaderboardId();
+                            String name = result.get().get(i).getDisplayName();
+                            Log.e(TAG, "FOUND | id=" + id + " | name=" + name);
+                            if (!TEST_ID.equals(id) && otherId == null) {
+                                otherId = id;
+                                otherName = name;
+                            }
+                        }
+                    } finally {
+                        result.get().release();
                     }
 
-                    Log.e(TAG, "EXPECTED LEADERBOARD PRESENT = " + expectedFound);
-                    result.get().release();
-                    call.resolve();
+                    if (otherId == null) {
+                        call.reject("Alternate leaderboard not found");
+                        return;
+                    }
+
+                    Log.e(TAG, "TEST OTHER | id=" + otherId + " | name=" + otherName);
+                    String finalId = otherId;
+                    PlayGames.getLeaderboardsClient(getActivity()).submitScoreImmediate(finalId, 100L)
+                            .addOnSuccessListener(scoreResult -> {
+                                Log.e(TAG, "OTHER SUBMIT SUCCESS | id=" + finalId);
+                                call.resolve();
+                            })
+                            .addOnFailureListener(error -> {
+                                logFailure("OTHER SUBMIT FAILED", error);
+                                call.reject("Alternate leaderboard failed: " + error.getMessage(), error);
+                            });
                 })
                 .addOnFailureListener(error -> {
-                    logFailure("LOAD LEADERBOARD METADATA FAILED", error);
-                    call.reject("Google Play Games leaderboard metadata failed: " + error.getMessage(), error);
+                    logFailure("METADATA FAILED", error);
+                    call.reject("Metadata failed: " + error.getMessage(), error);
                 });
-    }
-
-    private void logCurrentPlayer() {
-        PlayGames.getPlayersClient(getActivity())
-                .getCurrentPlayer()
-                .addOnSuccessListener(player -> Log.e(
-                        TAG,
-                        "CURRENT PLAYER SUCCESS | id=" + player.getPlayerId()
-                                + " | name=" + player.getDisplayName()))
-                .addOnFailureListener(error -> logFailure("CURRENT PLAYER FAILED", error));
     }
 
     private void logFailure(String prefix, Exception error) {
         if (error instanceof ApiException) {
-            ApiException apiException = (ApiException) error;
-            Log.e(TAG,
-                    prefix
-                            + " | statusCode=" + apiException.getStatusCode()
-                            + " | status=" + apiException.getStatus()
-                            + " | message=" + apiException.getMessage(),
-                    error);
-        } else if (error != null) {
-            Log.e(TAG, prefix + " | type=" + error.getClass().getName()
-                    + " | message=" + error.getMessage(), error);
+            ApiException e = (ApiException) error;
+            Log.e(TAG, prefix + " | statusCode=" + e.getStatusCode() + " | message=" + e.getMessage(), error);
         } else {
-            Log.e(TAG, prefix + " | no exception object");
+            Log.e(TAG, prefix + " | message=" + (error == null ? "null" : error.getMessage()), error);
         }
     }
 
     @PluginMethod
     public void showLeaderboard(PluginCall call) {
-        PlayGames.getLeaderboardsClient(getActivity())
-                .getLeaderboardIntent(LEADERBOARD_ID)
+        PlayGames.getLeaderboardsClient(getActivity()).getLeaderboardIntent(TEST_ID)
                 .addOnSuccessListener(intent -> {
                     getActivity().startActivityForResult(intent, 9001);
                     call.resolve();
                 })
-                .addOnFailureListener(error -> {
-                    logFailure("OPEN LEADERBOARD FAILED", error);
-                    call.reject("Failed to open Google Play leaderboard: " + error.getMessage(), error);
-                });
+                .addOnFailureListener(error -> call.reject("Open failed", error));
     }
 }
