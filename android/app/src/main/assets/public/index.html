@@ -1486,7 +1486,7 @@ hitSound.play().catch(() => {});
     }
   });
   // ==================== STAGE 6: VOLCANO ZONE ====================
-if (Math.floor(score / 10) % 7 === 5 && meteorTimer > 140) {
+if (Math.floor(score / 10) % 10 === 5 && meteorTimer > 140) {
 
     // FLOWING LAVA FLOOR (lethal)
     ctx.fillStyle = '#FF4500';
@@ -1513,7 +1513,7 @@ if (bird.y + bird.radius > H - 40 && !bird.invincible && !bird.testInvincible) {
     }
 
 // LAVA BALL SPAWNING - ONLY from far bottom-right, diagonal up-left
-if (Math.floor(score / 10) % 7 === 5 && frame % 90 === 0) {
+if (Math.floor(score / 10) % 10 === 5 && frame % 90 === 0) {
 
     lavaBalls.push({
         x: W - 25,
@@ -1668,7 +1668,7 @@ if (bird.shieldActive) {
 
 meteorTimer++;
 
-if (Math.floor(score / 10) % 7 === 3 && meteorTimer > 36) {
+if (Math.floor(score / 10) % 10 === 3 && meteorTimer > 36) {
     meteorTimer = 0;
 
     meteors.push({
@@ -2165,7 +2165,7 @@ ctx.shadowBlur = 0;
 ctx.fillStyle = "white";
 ctx.font = "24px Arial";
   // STAGE 6 VOLCANO VISUALS
-if (Math.floor(score / 10) % 7 === 5) {
+if (Math.floor(score / 10) % 10 === 5) {
     ctx.fillStyle = '#FF4500';
     ctx.fillRect(0, H - 40, W, 40);
 
