@@ -7,7 +7,6 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.games.PlayGames;
-import com.google.android.gms.games.leaderboard.LeaderboardVariant;
 
 @CapacitorPlugin(name = "Leaderboard")
 public class LeaderboardPlugin extends Plugin {
@@ -18,7 +17,7 @@ public class LeaderboardPlugin extends Plugin {
     @PluginMethod
     public void submitScore(PluginCall call) {
         long gameScore = call.getLong("score", 0L);
-        Log.e(TAG, "READ DIAGNOSTIC START | gameScore=" + gameScore + " | leaderboard=" + LEADERBOARD_ID);
+        Log.e(TAG, "METADATA DIAGNOSTIC START | gameScore=" + gameScore + " | expectedLeaderboard=" + LEADERBOARD_ID);
 
         PlayGames.getGamesSignInClient(getActivity())
                 .isAuthenticated()
@@ -27,7 +26,7 @@ public class LeaderboardPlugin extends Plugin {
                             && authTask.getResult() != null
                             && authTask.getResult().isAuthenticated()) {
                         logCurrentPlayer();
-                        loadTopScores(call);
+                        loadLeaderboardMetadata(call);
                     } else {
                         PlayGames.getGamesSignInClient(getActivity())
                                 .signIn()
@@ -36,7 +35,7 @@ public class LeaderboardPlugin extends Plugin {
                                             && signInTask.getResult() != null
                                             && signInTask.getResult().isAuthenticated()) {
                                         logCurrentPlayer();
-                                        loadTopScores(call);
+                                        loadLeaderboardMetadata(call);
                                     } else {
                                         Exception error = signInTask.getException();
                                         logFailure("SIGN IN FAILED", error);
@@ -47,23 +46,30 @@ public class LeaderboardPlugin extends Plugin {
                 });
     }
 
-    private void loadTopScores(PluginCall call) {
-        Log.e(TAG, "LOAD TOP SCORES START | leaderboard=" + LEADERBOARD_ID);
+    private void loadLeaderboardMetadata(PluginCall call) {
+        Log.e(TAG, "LOAD LEADERBOARD METADATA START");
 
         PlayGames.getLeaderboardsClient(getActivity())
-                .loadTopScores(
-                        LEADERBOARD_ID,
-                        LeaderboardVariant.TIME_SPAN_ALL_TIME,
-                        LeaderboardVariant.COLLECTION_PUBLIC,
-                        10,
-                        true)
+                .loadLeaderboardMetadata(true)
                 .addOnSuccessListener(result -> {
-                    Log.e(TAG, "LOAD TOP SCORES SUCCESS | leaderboard=" + LEADERBOARD_ID);
+                    int count = result.get().getCount();
+                    Log.e(TAG, "LOAD LEADERBOARD METADATA SUCCESS | count=" + count);
+
+                    boolean expectedFound = false;
+                    for (int i = 0; i < count; i++) {
+                        String id = result.get().get(i).getLeaderboardId();
+                        String name = result.get().get(i).getDisplayName();
+                        Log.e(TAG, "LEADERBOARD FOUND | id=" + id + " | name=" + name);
+                        if (LEADERBOARD_ID.equals(id)) expectedFound = true;
+                    }
+
+                    Log.e(TAG, "EXPECTED LEADERBOARD PRESENT = " + expectedFound);
+                    result.get().release();
                     call.resolve();
                 })
                 .addOnFailureListener(error -> {
-                    logFailure("LOAD TOP SCORES FAILED", error);
-                    call.reject("Google Play Games leaderboard read failed: " + error.getMessage(), error);
+                    logFailure("LOAD LEADERBOARD METADATA FAILED", error);
+                    call.reject("Google Play Games leaderboard metadata failed: " + error.getMessage(), error);
                 });
     }
 
