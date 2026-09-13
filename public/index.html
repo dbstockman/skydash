@@ -3287,9 +3287,16 @@ async function openLb() {
       return;
     }
 
+    const currentPlayerName = String(result?.currentPlayerName || '').trim();
+
     players.forEach((p, i) => {
       const row = document.createElement('div');
-      row.className = 'lbRow';
+
+      const isYou =
+        currentPlayerName &&
+        String(p.name || '').trim().toLowerCase() === currentPlayerName.toLowerCase();
+
+      row.className = 'lbRow' + (isYou ? ' lbYou' : '');
 
       const rank = Number(p.rank) || (i + 1);
       const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
@@ -3299,7 +3306,7 @@ async function openLb() {
         <div class="lbRank ${rankClass}">${rankIcon}</div>
         <div class="lbAvatar">🐦</div>
         <div class="lbInfo">
-          <div class="lbName">${p.name || 'Player'}</div>
+          <div class="lbName">${p.name || 'Player'}${isYou ? ' (You)' : ''}</div>
           <div class="lbScore">Best: ${Number(p.score) || 0}</div>
         </div>
       `;
