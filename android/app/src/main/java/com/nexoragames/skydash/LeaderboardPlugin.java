@@ -18,7 +18,9 @@ public class LeaderboardPlugin extends Plugin {
 
     @PluginMethod
     public void submitScore(PluginCall call) {
-        long score = call.getLong("score", 0L);
+        Object rawScore = call.getData().opt("score");
+        long score = rawScore instanceof Number ? ((Number) rawScore).longValue() : 0L;
+        Log.e(TAG, "RAW SCORE RECEIVED | raw=" + rawScore + " | parsed=" + score);
 
         PlayGames.getGamesSignInClient(getActivity())
                 .isAuthenticated()
