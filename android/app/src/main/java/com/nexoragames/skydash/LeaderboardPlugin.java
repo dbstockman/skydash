@@ -6,8 +6,8 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.games.LeaderboardVariant;
 import com.google.android.gms.games.PlayGames;
+import com.google.android.gms.games.leaderboard.LeaderboardVariant;
 
 @CapacitorPlugin(name = "Leaderboard")
 public class LeaderboardPlugin extends Plugin {
