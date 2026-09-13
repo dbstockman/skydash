@@ -117,11 +117,25 @@ public class LeaderboardPlugin extends Plugin {
                                 leaderboardScores.release();
                             }
 
-                            JSObject response = new JSObject();
-                            response.put("scores", scores);
-                            response.put("leaderboardId", leaderboardId);
-                            Log.e(TAG, "LEADERBOARD LOAD SUCCESS | count=" + scores.length());
-                            call.resolve(response);
+                            PlayGames.getPlayersClient(getActivity())
+                                    .getCurrentPlayer()
+                                    .addOnSuccessListener(player -> {
+                                        JSObject response = new JSObject();
+                                        response.put("scores", scores);
+                                        response.put("leaderboardId", leaderboardId);
+                                        response.put("currentPlayerName", player == null ? "" : player.getDisplayName());
+                                        Log.e(TAG, "LEADERBOARD LOAD SUCCESS | count=" + scores.length()
+                                                + " | currentPlayer=" + (player == null ? "null" : player.getDisplayName()));
+                                        call.resolve(response);
+                                    })
+                                    .addOnFailureListener(playerError -> {
+                                        Log.w(TAG, "CURRENT PLAYER LOOKUP FAILED | " + playerError.getMessage());
+                                        JSObject response = new JSObject();
+                                        response.put("scores", scores);
+                                        response.put("leaderboardId", leaderboardId);
+                                        response.put("currentPlayerName", "");
+                                        call.resolve(response);
+                                    });
                         })
                         .addOnFailureListener(error -> {
                             logFailure("LEADERBOARD LOAD FAILED", error);
