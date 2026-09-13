@@ -15,11 +15,13 @@ public class LeaderboardPlugin extends Plugin {
 
     private static final String TAG = "SkyDashGPGS";
     private static final String LEADERBOARD_ID = "Cgk1Mr5rcEQEAIQAw";
+    private static final long DIAGNOSTIC_SCORE = 100L;
 
     @PluginMethod
     public void submitScore(PluginCall call) {
-        long score = call.getLong("score", 0L);
-        Log.e(TAG, "SUBMIT SCORE VALUE = " + score + " | leaderboard=" + LEADERBOARD_ID);
+        long gameScore = call.getLong("score", 0L);
+        long score = DIAGNOSTIC_SCORE;
+        Log.e(TAG, "DIAGNOSTIC MODE | gameScore=" + gameScore + " | submittingFixedScore=" + score + " | leaderboard=" + LEADERBOARD_ID);
 
         PlayGames.getGamesSignInClient(getActivity())
                 .isAuthenticated()
@@ -63,6 +65,7 @@ public class LeaderboardPlugin extends Plugin {
                     response.put("submitted", true);
                     response.put("score", score);
                     response.put("leaderboardId", LEADERBOARD_ID);
+                    response.put("diagnosticMode", true);
                     call.resolve(response);
                 })
                 .addOnFailureListener(error -> {
