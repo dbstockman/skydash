@@ -1,13 +1,12 @@
 package com.nexoragames.skydash;
 
 import android.util.Log;
-
-import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.games.LeaderboardVariant;
 import com.google.android.gms.games.PlayGames;
 
 @CapacitorPlugin(name = "Leaderboard")
@@ -15,13 +14,11 @@ public class LeaderboardPlugin extends Plugin {
 
     private static final String TAG = "SkyDashGPGS";
     private static final String LEADERBOARD_ID = "Cgk1Mr5rcEQEAIQAw";
-    private static final long DIAGNOSTIC_SCORE = 100L;
 
     @PluginMethod
     public void submitScore(PluginCall call) {
         long gameScore = call.getLong("score", 0L);
-        long score = DIAGNOSTIC_SCORE;
-        Log.e(TAG, "DIAGNOSTIC MODE | gameScore=" + gameScore + " | submittingFixedScore=" + score + " | leaderboard=" + LEADERBOARD_ID);
+        Log.e(TAG, "READ DIAGNOSTIC START | gameScore=" + gameScore + " | leaderboard=" + LEADERBOARD_ID);
 
         PlayGames.getGamesSignInClient(getActivity())
                 .isAuthenticated()
@@ -30,47 +27,43 @@ public class LeaderboardPlugin extends Plugin {
                             && authTask.getResult() != null
                             && authTask.getResult().isAuthenticated()) {
                         logCurrentPlayer();
-                        submitScoreImmediate(call, score);
-                        return;
+                        loadTopScores(call);
+                    } else {
+                        PlayGames.getGamesSignInClient(getActivity())
+                                .signIn()
+                                .addOnCompleteListener(signInTask -> {
+                                    if (signInTask.isSuccessful()
+                                            && signInTask.getResult() != null
+                                            && signInTask.getResult().isAuthenticated()) {
+                                        logCurrentPlayer();
+                                        loadTopScores(call);
+                                    } else {
+                                        Exception error = signInTask.getException();
+                                        logFailure("SIGN IN FAILED", error);
+                                        call.reject("Google Play Games sign-in failed", error);
+                                    }
+                                });
                     }
-
-                    Log.e(TAG, "NOT AUTHENTICATED - attempting sign in");
-                    PlayGames.getGamesSignInClient(getActivity())
-                            .signIn()
-                            .addOnCompleteListener(signInTask -> {
-                                if (signInTask.isSuccessful()
-                                        && signInTask.getResult() != null
-                                        && signInTask.getResult().isAuthenticated()) {
-                                    Log.e(TAG, "SIGN IN SUCCESS");
-                                    logCurrentPlayer();
-                                    submitScoreImmediate(call, score);
-                                } else {
-                                    Exception error = signInTask.getException();
-                                    logFailure("SIGN IN FAILED", error);
-                                    call.reject("Google Play Games sign-in failed", error);
-                                }
-                            });
                 });
     }
 
-    private void submitScoreImmediate(PluginCall call, long score) {
-        Log.e(TAG, "SUBMIT IMMEDIATE START | score=" + score + " | leaderboard=" + LEADERBOARD_ID);
+    private void loadTopScores(PluginCall call) {
+        Log.e(TAG, "LOAD TOP SCORES START | leaderboard=" + LEADERBOARD_ID);
 
         PlayGames.getLeaderboardsClient(getActivity())
-                .submitScoreImmediate(LEADERBOARD_ID, score)
+                .loadTopScores(
+                        LEADERBOARD_ID,
+                        LeaderboardVariant.TIME_SPAN_ALL_TIME,
+                        LeaderboardVariant.COLLECTION_PUBLIC,
+                        10,
+                        true)
                 .addOnSuccessListener(result -> {
-                    Log.e(TAG, "SUBMIT IMMEDIATE SUCCESS | score=" + score);
-
-                    JSObject response = new JSObject();
-                    response.put("submitted", true);
-                    response.put("score", score);
-                    response.put("leaderboardId", LEADERBOARD_ID);
-                    response.put("diagnosticMode", true);
-                    call.resolve(response);
+                    Log.e(TAG, "LOAD TOP SCORES SUCCESS | leaderboard=" + LEADERBOARD_ID);
+                    call.resolve();
                 })
                 .addOnFailureListener(error -> {
-                    logFailure("SUBMIT IMMEDIATE FAILED", error);
-                    call.reject("Google Play Games score submission failed: " + error.getMessage(), error);
+                    logFailure("LOAD TOP SCORES FAILED", error);
+                    call.reject("Google Play Games leaderboard read failed: " + error.getMessage(), error);
                 });
     }
 
@@ -87,20 +80,15 @@ public class LeaderboardPlugin extends Plugin {
     private void logFailure(String prefix, Exception error) {
         if (error instanceof ApiException) {
             ApiException apiException = (ApiException) error;
-            Log.e(
-                    TAG,
+            Log.e(TAG,
                     prefix
                             + " | statusCode=" + apiException.getStatusCode()
                             + " | status=" + apiException.getStatus()
                             + " | message=" + apiException.getMessage(),
                     error);
         } else if (error != null) {
-            Log.e(
-                    TAG,
-                    prefix
-                            + " | type=" + error.getClass().getName()
-                            + " | message=" + error.getMessage(),
-                    error);
+            Log.e(TAG, prefix + " | type=" + error.getClass().getName()
+                    + " | message=" + error.getMessage(), error);
         } else {
             Log.e(TAG, prefix + " | no exception object");
         }
@@ -108,12 +96,9 @@ public class LeaderboardPlugin extends Plugin {
 
     @PluginMethod
     public void showLeaderboard(PluginCall call) {
-        Log.e(TAG, "OPEN LEADERBOARD START | leaderboard=" + LEADERBOARD_ID);
-
         PlayGames.getLeaderboardsClient(getActivity())
                 .getLeaderboardIntent(LEADERBOARD_ID)
                 .addOnSuccessListener(intent -> {
-                    Log.e(TAG, "OPEN LEADERBOARD INTENT SUCCESS");
                     getActivity().startActivityForResult(intent, 9001);
                     call.resolve();
                 })
