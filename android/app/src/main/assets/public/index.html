@@ -3277,7 +3277,9 @@ function revivePlayer(consumeRevive = true) {
   reviveUsed = true;
   window.revivedThisRun = true;
 }
-    document.getElementById('reviveAdBtn').style.display = 'none';
+if (consumeRevive) {
+  document.getElementById('reviveAdBtn').style.display = 'none';
+}
     state = 'playing';
 
   bird.y = 300;
@@ -3348,13 +3350,12 @@ document.getElementById('retryBtn').addEventListener('click', () => {
 });
 
 document.getElementById('reviveGemBtn').addEventListener('click', () => {
-  if (reviveUsed) return;
+  if (reviveUsed || window.revivedThisRun) return;
+
   if (gems >= 25) {
     gems -= 25;
     updateCurrency();
-    document.getElementById('gameoverScreen').classList.add('hidden');
-    reviveUsed = true;
-    revivePlayer();
+    revivePlayer(true);
   } else {
     alert('Not enough gems!');
   }
