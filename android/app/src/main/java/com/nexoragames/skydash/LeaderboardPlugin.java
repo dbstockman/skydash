@@ -9,11 +9,15 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.games.PlayGames;
 import com.google.android.gms.games.LeaderboardsClient;
+import com.google.android.gms.games.PageDirection;
+import com.google.android.gms.games.PlayGames;
 import com.google.android.gms.games.leaderboard.LeaderboardScore;
 import com.google.android.gms.games.leaderboard.LeaderboardScoreBuffer;
 import com.google.android.gms.games.leaderboard.LeaderboardVariant;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @CapacitorPlugin(name = "Leaderboard")
 public class LeaderboardPlugin extends Plugin {
@@ -21,6 +25,8 @@ public class LeaderboardPlugin extends Plugin {
     private static final String TAG = "SkyDashGPGS";
     private static final String LEADERBOARD_NAME = "SkyDash High Scores";
     private static final String LEADERBOARD_ID = "CgkI1Mr5rcEQEAIQAQ";
+    private static final int TOP_SCORE_LIMIT = 100;
+    private static final int SCORES_PER_PAGE = 25;
 
     @PluginMethod
     public void submitScore(PluginCall call) {
@@ -88,55 +94,23 @@ public class LeaderboardPlugin extends Plugin {
         findLeaderboardId(new LeaderboardIdCallback() {
             @Override
             public void onSuccess(String leaderboardId) {
-                PlayGames.getLeaderboardsClient(getActivity())
-                        .loadTopScores(
+                LeaderboardsClient client = PlayGames.getLeaderboardsClient(getActivity());
+                client.loadTopScores(
                                 leaderboardId,
                                 LeaderboardVariant.TIME_SPAN_ALL_TIME,
                                 LeaderboardVariant.COLLECTION_PUBLIC,
-                                25,
+                                SCORES_PER_PAGE,
                                 true)
                         .addOnSuccessListener(data -> {
-                            LeaderboardsClient.LeaderboardScores leaderboardScores = data.get();
-                            if (leaderboardScores == null) {
+                            LeaderboardsClient.LeaderboardScores firstPage = data.get();
+                            if (firstPage == null) {
                                 call.reject("Google Play Games returned no leaderboard scores");
                                 return;
                             }
 
                             JSArray scores = new JSArray();
-                            LeaderboardScoreBuffer scoreBuffer = leaderboardScores.getScores();
-
-                            try {
-                                for (int i = 0; i < scoreBuffer.getCount(); i++) {
-                                    LeaderboardScore entry = scoreBuffer.get(i);
-                                    JSObject row = new JSObject();
-                                    row.put("name", entry.getScoreHolderDisplayName());
-                                    row.put("score", entry.getRawScore());
-                                    row.put("rank", entry.getRank());
-                                    scores.put(row);
-                                }
-                            } finally {
-                                leaderboardScores.release();
-                            }
-
-                            PlayGames.getPlayersClient(getActivity())
-                                    .getCurrentPlayer()
-                                    .addOnSuccessListener(player -> {
-                                        JSObject response = new JSObject();
-                                        response.put("scores", scores);
-                                        response.put("leaderboardId", leaderboardId);
-                                        response.put("currentPlayerName", player == null ? "" : player.getDisplayName());
-                                        Log.e(TAG, "LEADERBOARD LOAD SUCCESS | count=" + scores.length()
-                                                + " | currentPlayer=" + (player == null ? "null" : player.getDisplayName()));
-                                        call.resolve(response);
-                                    })
-                                    .addOnFailureListener(playerError -> {
-                                        Log.w(TAG, "CURRENT PLAYER LOOKUP FAILED | " + playerError.getMessage());
-                                        JSObject response = new JSObject();
-                                        response.put("scores", scores);
-                                        response.put("leaderboardId", leaderboardId);
-                                        response.put("currentPlayerName", "");
-                                        call.resolve(response);
-                                    });
+                            Set<Long> seenRanks = new HashSet<>();
+                            loadScorePage(client, firstPage, scores, seenRanks, call, leaderboardId, 1);
                         })
                         .addOnFailureListener(error -> {
                             logFailure("LEADERBOARD LOAD FAILED", error);
@@ -150,6 +124,81 @@ public class LeaderboardPlugin extends Plugin {
                 call.reject("SkyDash leaderboard not found", error);
             }
         });
+    }
+
+    private void loadScorePage(
+            LeaderboardsClient client,
+            LeaderboardsClient.LeaderboardScores page,
+            JSArray scores,
+            Set<Long> seenRanks,
+            PluginCall call,
+            String leaderboardId,
+            int pageNumber) {
+
+        LeaderboardScoreBuffer scoreBuffer = page.getScores();
+        int scoreCountBeforePage = scores.length();
+
+        for (int i = 0; i < scoreBuffer.getCount() && scores.length() < TOP_SCORE_LIMIT; i++) {
+            LeaderboardScore entry = scoreBuffer.get(i);
+            long rank = entry.getRank();
+
+            if (seenRanks.add(rank)) {
+                JSObject row = new JSObject();
+                row.put("name", entry.getScoreHolderDisplayName());
+                row.put("score", entry.getRawScore());
+                row.put("rank", rank);
+                scores.put(row);
+            }
+        }
+
+        boolean reachedTop100 = scores.length() >= TOP_SCORE_LIMIT;
+        boolean noScoresOnPage = scoreBuffer.getCount() == 0;
+        boolean noNewScores = scores.length() == scoreCountBeforePage;
+        boolean reachedFourPages = pageNumber >= 4;
+
+        if (reachedTop100 || noScoresOnPage || noNewScores || reachedFourPages) {
+            page.release();
+            finishLeaderboardResponse(call, leaderboardId, scores);
+            return;
+        }
+
+        client.loadMoreScores(scoreBuffer, SCORES_PER_PAGE, PageDirection.NEXT)
+                .addOnSuccessListener(nextData -> {
+                    page.release();
+                    LeaderboardsClient.LeaderboardScores nextPage = nextData.get();
+                    if (nextPage == null) {
+                        finishLeaderboardResponse(call, leaderboardId, scores);
+                        return;
+                    }
+                    loadScorePage(client, nextPage, scores, seenRanks, call, leaderboardId, pageNumber + 1);
+                })
+                .addOnFailureListener(error -> {
+                    page.release();
+                    logFailure("LEADERBOARD PAGE LOAD FAILED", error);
+                    call.reject("Failed to load additional Google Play leaderboard scores: " + error.getMessage(), error);
+                });
+    }
+
+    private void finishLeaderboardResponse(PluginCall call, String leaderboardId, JSArray scores) {
+        PlayGames.getPlayersClient(getActivity())
+                .getCurrentPlayer()
+                .addOnSuccessListener(player -> {
+                    JSObject response = new JSObject();
+                    response.put("scores", scores);
+                    response.put("leaderboardId", leaderboardId);
+                    response.put("currentPlayerName", player == null ? "" : player.getDisplayName());
+                    Log.e(TAG, "LEADERBOARD LOAD SUCCESS | count=" + scores.length()
+                            + " | currentPlayer=" + (player == null ? "null" : player.getDisplayName()));
+                    call.resolve(response);
+                })
+                .addOnFailureListener(playerError -> {
+                    Log.w(TAG, "CURRENT PLAYER LOOKUP FAILED | " + playerError.getMessage());
+                    JSObject response = new JSObject();
+                    response.put("scores", scores);
+                    response.put("leaderboardId", leaderboardId);
+                    response.put("currentPlayerName", "");
+                    call.resolve(response);
+                });
     }
 
     @PluginMethod
