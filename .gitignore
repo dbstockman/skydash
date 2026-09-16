@@ -15,3 +15,8 @@ android/platforms/
 android/platform-tools/
 android/licenses/
 android/cmdline-tools/
+
+# Local Android SDK files
+android/build-tools/
+android/commandlinetools-*.zip
+android/.knownPackages
