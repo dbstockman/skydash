@@ -507,6 +507,7 @@ z-index: 51;
     <div class="finalScore" id="finalScore">0</div>
     <div class="bestScore">🏆 BEST: <span id="bestScoreDisplay">0</span></div>
     <div class="coinsEarned" id="coinsEarned">+0 🪙</div>
+   <div id="xpEarned">+0 XP ⭐</div> 
     <div class="goButtons" style="display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;">
 
 <button class="bigBtn" id="reviveGemBtn"
@@ -661,13 +662,38 @@ let save = JSON.parse(localStorage.getItem('SKYDASHSave') || '{}');
 save.coins = save.coins || 0;
 save.gems = save.gems || 0;
 save.best = save.best || 0;
+save.xp = save.xp || 0;
+save.playerLevel = save.playerLevel || 1;
 save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'default' };
 save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'default' };
 save.lastEgg = save.lastEgg || 0;
 save.shields = save.shields || 1;
 save.boosts = save.boosts || 2;
 function persist() { localStorage.setItem('SkyDashSave', JSON.stringify(save)); }
+function xpNeededForLevel(level) {
+  return 500 + ((level - 1) * 250);
+}
+function checkPlayerLevelUp() {
+  while (save.xp >= xpNeededForLevel(save.playerLevel)) {
+    save.xp -= xpNeededForLevel(save.playerLevel);
+    save.playerLevel++;
+  }
 
+  persist();
+}
+let runXpAwarded = false;
+function awardRunXp(finalScore) {
+  if (runXpAwarded) return 0;
+
+  const xpEarned = finalScore * 10;
+  save.xp += xpEarned;
+  runXpAwarded = true;
+
+  checkPlayerLevelUp();
+  persist();
+
+  return xpEarned;
+}
 // ── SHOP DATA ────────────────────────────────────────────
 const SHOP = {
   hair: [
@@ -3048,6 +3074,7 @@ function showHome() {
 }
 
 function startGame() {
+  runXpAwarded = false;
   state = 'playing';
   save.coins = 10000;
 save.gems = 1000;
@@ -3122,6 +3149,7 @@ bird.invincibleTimer = 180;
   loop();
 }
 function showGameover(sc, earned) {
+  
 if (reviveUsed || window.revivedThisRun) {
   document.getElementById('reviveAdBtn').classList.add('forceHide');
   document.getElementById('reviveGemBtn').classList.add('forceHide');
@@ -3134,6 +3162,7 @@ if (reviveUsed || window.revivedThisRun) {
   document.getElementById('finalScore').textContent = sc;
   document.getElementById('bestScoreDisplay').textContent = save.best;
   document.getElementById('coinsEarned').textContent = `+${earned} 🪙 earned`;
+  document.getElementById('xpEarned').textContent = `+${sc * 10} XP ⭐`;
   // Update LB
   LB_PLAYERS.find(p => p.isYou).score = save.best;
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Leaderboard) {
@@ -3149,7 +3178,11 @@ if (reviveUsed || window.revivedThisRun) {
 
 // ── NAV BUTTONS ───────────────────────────────────────────
 document.getElementById('playBtn').addEventListener('click', startGame);
-document.getElementById('retryBtn').addEventListener('click', startGame);
+document.getElementById('retryBtn').addEventListener('click', () => {
+  awardRunXp(score);
+  startGame();
+});
+
 document.getElementById('reviveGemBtn').addEventListener('click', () => {
   if (reviveUsed) return;
   if (gems >= 25) {
@@ -3205,6 +3238,7 @@ if (rewardEarned && !reviveUsed) {
 });
 
 document.getElementById('goHomeBtn').addEventListener('click', () => {
+  awardRunXp(score);
   document.getElementById('gameoverScreen').classList.add('hidden');
   showHome();
 });
