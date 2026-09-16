@@ -3489,67 +3489,7 @@ function renderShopTab(cat) {
         }
       }
     });
-  // 2x XP purchase
-if (item.id === "double_xp") {
-  const buyWithCoins = div.querySelector(".coinBuyBtn");
-  const buyWithGems = div.querySelector(".gemBuyBtn");
 
-  const activateDoubleXp = (currency) => {
-    if (currency === "coins") {
-      if (save.coins < item.coinPrice) {
-        showNotif("Not enough coins! 🪙");
-        return;
-      }
-      save.coins -= item.coinPrice;
-    } else {
-      if (save.gems < item.gemPrice) {
-        showNotif("Not enough gems! 💎");
-        return;
-      }
-      save.gems -= item.gemPrice;
-    }
-
-    save.doubleXpNextRun = true;
-
-    persist();
-    updateCoinDisplays();
-    showNotif("⭐ 2x XP activated for next run!");
-  };
-
-  const confirmXpPurchase = (currency) => {
-    const popup = document.getElementById("purchaseConfirm");
-    const title = document.getElementById("purchaseConfirmTitle");
-    const text = document.getElementById("purchaseConfirmText");
-    const yesBtn = document.getElementById("purchaseYesBtn");
-    const cancelBtn = document.getElementById("purchaseCancelBtn");
-
-    const cost = currency === "coins"
-      ? `${item.coinPrice} 🪙`
-      : `${item.gemPrice} 💎`;
-
-    title.textContent = "Purchase 2x XP?";
-    text.textContent = `Activate 2x XP for your next run for ${cost}?`;
-
-    popup.classList.remove("hidden");
-
-    yesBtn.onclick = () => {
-      popup.classList.add("hidden");
-      activateDoubleXp(currency);
-    };
-
-    cancelBtn.onclick = () => {
-      popup.classList.add("hidden");
-    };
-  };
-
-  buyWithCoins.addEventListener("click", () =>
-    confirmXpPurchase("coins")
-  );
-
-  buyWithGems.addEventListener("click", () =>
-    confirmXpPurchase("gems")
-  );
-}
 
     grid.appendChild(div);
   });
@@ -3702,7 +3642,67 @@ buyWithCoins.addEventListener("click", () => confirmPurchase("coins"));
 buyWithGems.addEventListener("click", () => confirmPurchase("gems"));
 
 }
+// 2x XP purchase
+if (item.id === "double_xp") {
+  const buyWithCoins = div.querySelector(".coinBuyBtn");
+  const buyWithGems = div.querySelector(".gemBuyBtn");
 
+  const activateDoubleXp = (currency) => {
+    if (currency === "coins") {
+      if (save.coins < item.coinPrice) {
+        showNotif("Not enough coins! 🪙");
+        return;
+      }
+      save.coins -= item.coinPrice;
+    } else {
+      if (save.gems < item.gemPrice) {
+        showNotif("Not enough gems! 💎");
+        return;
+      }
+      save.gems -= item.gemPrice;
+    }
+
+    save.doubleXpNextRun = true;
+
+    persist();
+    updateCoinDisplays();
+    showNotif("⭐ 2x XP activated for next run!");
+  };
+
+  const confirmXpPurchase = (currency) => {
+    const popup = document.getElementById("purchaseConfirm");
+    const title = document.getElementById("purchaseConfirmTitle");
+    const text = document.getElementById("purchaseConfirmText");
+    const yesBtn = document.getElementById("purchaseYesBtn");
+    const cancelBtn = document.getElementById("purchaseCancelBtn");
+
+    const cost = currency === "coins"
+      ? `${item.coinPrice} 🪙`
+      : `${item.gemPrice} 💎`;
+
+    title.textContent = "Purchase 2x XP?";
+    text.textContent = `Activate 2x XP for your next run for ${cost}?`;
+
+    popup.classList.remove("hidden");
+
+    yesBtn.onclick = () => {
+      popup.classList.add("hidden");
+      activateDoubleXp(currency);
+    };
+
+    cancelBtn.onclick = () => {
+      popup.classList.add("hidden");
+    };
+  };
+
+  buyWithCoins.addEventListener("click", () =>
+    confirmXpPurchase("coins")
+  );
+
+  buyWithGems.addEventListener("click", () =>
+    confirmXpPurchase("gems")
+  );
+}
     grid.appendChild(div);
   });
 }
