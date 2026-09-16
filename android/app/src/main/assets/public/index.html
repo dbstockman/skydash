@@ -949,14 +949,7 @@ storeItems: [
   gemPrice: 10,
   bonus: "Upgrade your next Mystery Egg"
 },
-{
-  id: "power_pack",
-  name: "Power Pack",
-  icon: "🎒",
-  coinPrice: 1500,
-  gemPrice: 25,
-  bonus: "2 Shields, 2 Boosts, 2 Magnets"
-},
+
 {
   id: "second_chance",
   name: "Second Chance",
@@ -3704,6 +3697,134 @@ if (item.id === "double_xp") {
     confirmXpPurchase("gems")
   );
 }
+// Lucky Egg purchase
+if (item.id === "lucky_egg") {
+  const buyWithCoins = div.querySelector(".coinBuyBtn");
+  const buyWithGems = div.querySelector(".gemBuyBtn");
+
+  const activateLuckyEgg = (currency) => {
+    if (currency === "coins") {
+      if (save.coins < item.coinPrice) {
+        showNotif("Not enough coins! 🪙");
+        return;
+      }
+      save.coins -= item.coinPrice;
+    } else {
+      if (save.gems < item.gemPrice) {
+        showNotif("Not enough gems! 💎");
+        return;
+      }
+      save.gems -= item.gemPrice;
+    }
+
+    save.luckyEggActive = true;
+
+    persist();
+    updateCoinDisplays();
+    showNotif("🥚 Lucky Egg activated for your next Mystery Egg!");
+  };
+
+  const confirmLuckyEggPurchase = (currency) => {
+    const popup = document.getElementById("purchaseConfirm");
+    const title = document.getElementById("purchaseConfirmTitle");
+    const text = document.getElementById("purchaseConfirmText");
+    const yesBtn = document.getElementById("purchaseYesBtn");
+    const cancelBtn = document.getElementById("purchaseCancelBtn");
+
+    const cost = currency === "coins"
+      ? `${item.coinPrice} 🪙`
+      : `${item.gemPrice} 💎`;
+
+    title.textContent = "Purchase Lucky Egg?";
+    text.textContent = `Upgrade your next Mystery Egg for ${cost}?`;
+
+    popup.classList.remove("hidden");
+
+    yesBtn.onclick = () => {
+      popup.classList.add("hidden");
+      activateLuckyEgg(currency);
+    };
+
+    cancelBtn.onclick = () => {
+      popup.classList.add("hidden");
+    };
+  };
+
+  buyWithCoins.addEventListener("click", () =>
+    confirmLuckyEggPurchase("coins")
+  );
+
+  buyWithGems.addEventListener("click", () =>
+    confirmLuckyEggPurchase("gems")
+  );
+}
+// Second Chance purchase
+if (item.id === "second_chance") {
+  const buyWithCoins = div.querySelector(".coinBuyBtn");
+  const buyWithGems = div.querySelector(".gemBuyBtn");
+
+  const activateSecondChance = (currency) => {
+    if (save.secondChanceActive) {
+      showNotif("❤️ Second Chance is already active!");
+      return;
+    }
+
+    if (currency === "coins") {
+      if (save.coins < item.coinPrice) {
+        showNotif("Not enough coins! 🪙");
+        return;
+      }
+      save.coins -= item.coinPrice;
+    } else {
+      if (save.gems < item.gemPrice) {
+        showNotif("Not enough gems! 💎");
+        return;
+      }
+      save.gems -= item.gemPrice;
+    }
+
+    save.secondChanceActive = true;
+
+    persist();
+    updateCoinDisplays();
+    showNotif("❤️ Second Chance activated for your next run!");
+  };
+
+  const confirmSecondChancePurchase = (currency) => {
+    const popup = document.getElementById("purchaseConfirm");
+    const title = document.getElementById("purchaseConfirmTitle");
+    const text = document.getElementById("purchaseConfirmText");
+    const yesBtn = document.getElementById("purchaseYesBtn");
+    const cancelBtn = document.getElementById("purchaseCancelBtn");
+
+    const cost = currency === "coins"
+      ? `${item.coinPrice} 🪙`
+      : `${item.gemPrice} 💎`;
+
+    title.textContent = "Purchase Second Chance?";
+    text.textContent = `Automatically revive once on your next run for ${cost}?`;
+
+    popup.classList.remove("hidden");
+
+    yesBtn.onclick = () => {
+      popup.classList.add("hidden");
+      activateSecondChance(currency);
+    };
+
+    cancelBtn.onclick = () => {
+      popup.classList.add("hidden");
+    };
+  };
+
+  buyWithCoins.addEventListener("click", () =>
+    confirmSecondChancePurchase("coins")
+  );
+
+  buyWithGems.addEventListener("click", () =>
+    confirmSecondChancePurchase("gems")
+  );
+}
+
     grid.appendChild(div);
   });
 }
@@ -3824,6 +3945,8 @@ function updateEggUI() {
     setTimeout(updateEggUI, 1000);
   }
 }
+save.luckyEggActive = save.luckyEggActive || false;
+save.secondChanceActive = save.secondChanceActive || false;
 function crackEgg() {
 tapSound.currentTime = 0;
 tapSound.play().catch(() => {});
@@ -3856,6 +3979,24 @@ eggEmoji = "🥚";
   coinMax = 500;
   gemMin = 3;
   gemMax = 6;
+}
+// Lucky Egg — upgrade next Mystery Egg by one tier
+if (save.luckyEggActive) {
+  if (eggType === "White Egg") {
+    eggType = "Purple Egg";
+    coinMin = 250;
+    coinMax = 500;
+    gemMin = 3;
+    gemMax = 6;
+  } else if (eggType === "Purple Egg") {
+    eggType = "Gold Egg";
+    coinMin = 800;
+    coinMax = 1500;
+    gemMin = 10;
+    gemMax = 20;
+  }
+
+  save.luckyEggActive = false;
 }
 
 const bonusCoins = coinMin + Math.floor(Math.random() * (coinMax - coinMin + 1));
