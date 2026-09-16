@@ -20,6 +20,7 @@ public class LeaderboardPlugin extends Plugin {
 
     private static final String TAG = "SkyDashGPGS";
     private static final String LEADERBOARD_NAME = "SkyDash High Scores";
+    private static final String LEADERBOARD_ID = "CgkI1Mr5rcEQEAIQAQ";
 
     @PluginMethod
     public void submitScore(PluginCall call) {
