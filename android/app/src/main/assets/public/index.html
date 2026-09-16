@@ -2021,7 +2021,25 @@ for (const p of enemyPlanes) {
     }
   }
 }
-  coins.forEach(c => c.x -= pipeSpeed * .7);
+ coins.forEach(c => {
+  // Normal coin movement
+  c.x -= pipeSpeed * 0.7;
+
+  // Coin Magnet attraction
+  if (window.coinMagnetActive) {
+    const dx = bird.x - c.x;
+    const dy = bird.y - c.y;
+    const distance = Math.hypot(dx, dy);
+    const magnetRange = 180;
+
+    if (distance < magnetRange && distance > 0) {
+      const pullStrength = 7;
+
+      c.x += (dx / distance) * pullStrength;
+      c.y += (dy / distance) * pullStrength;
+    }
+  }
+});
   // Coin collection
   coins = coins.filter(c => {
     if(Math.hypot(c.x - bird.x, c.y - bird.y) < 22) {
@@ -3198,7 +3216,13 @@ save.gems = 1000;
 persist();
 updateCoinDisplays();
   window.doubleCoinsActive = save.doubleCoinsNextRun === true;
+window.coinMagnetActive = (save.magnets || 0) > 0;
 
+if (window.coinMagnetActive) {
+  save.magnets--;
+  persist();
+  showNotif("🧲 Coin Magnet ACTIVE!");
+}
 if (window.doubleCoinsActive) {
   save.doubleCoinsNextRun = false;
   persist();
