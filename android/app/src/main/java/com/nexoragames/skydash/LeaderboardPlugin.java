@@ -16,6 +16,9 @@ import com.google.android.gms.games.leaderboard.LeaderboardScore;
 import com.google.android.gms.games.leaderboard.LeaderboardScoreBuffer;
 import com.google.android.gms.games.leaderboard.LeaderboardVariant;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @CapacitorPlugin(name = "Leaderboard")
 public class LeaderboardPlugin extends Plugin {
 
@@ -91,7 +94,8 @@ public class LeaderboardPlugin extends Plugin {
                     }
 
                     JSArray scores = new JSArray();
-                    loadScorePage(client, firstPage, scores, call, 1);
+                    Set<String> seenEntries = new HashSet<>();
+                    loadScorePage(client, firstPage, scores, seenEntries, call, 1);
                 })
                 .addOnFailureListener(error -> {
                     logFailure("LEADERBOARD LOAD FAILED", error);
@@ -103,26 +107,40 @@ public class LeaderboardPlugin extends Plugin {
             LeaderboardsClient client,
             LeaderboardsClient.LeaderboardScores page,
             JSArray scores,
+            Set<String> seenEntries,
             PluginCall call,
             int pageNumber) {
 
         LeaderboardScoreBuffer scoreBuffer = page.getScores();
+        int scoreCountBeforePage = scores.length();
 
         for (int i = 0; i < scoreBuffer.getCount() && scores.length() < TOP_SCORE_LIMIT; i++) {
             LeaderboardScore entry = scoreBuffer.get(i);
+            String name = entry.getScoreHolderDisplayName();
+            long score = entry.getRawScore();
+            long rank = entry.getRank();
+
+            // Google can repeat the same page when there are no additional results.
+            // Include rank in the key so different players tied at the same score/rank
+            // are still preserved when their display names differ.
+            String entryKey = String.valueOf(name) + "\u0000" + score + "\u0000" + rank;
+            if (!seenEntries.add(entryKey)) {
+                continue;
+            }
 
             JSObject row = new JSObject();
-            row.put("name", entry.getScoreHolderDisplayName());
-            row.put("score", entry.getRawScore());
-            row.put("rank", entry.getRank());
+            row.put("name", name);
+            row.put("score", score);
+            row.put("rank", rank);
             scores.put(row);
         }
 
         boolean reachedTop100 = scores.length() >= TOP_SCORE_LIMIT;
         boolean noScoresOnPage = scoreBuffer.getCount() == 0;
+        boolean noNewScores = scores.length() == scoreCountBeforePage;
         boolean reachedFourPages = pageNumber >= 4;
 
-        if (reachedTop100 || noScoresOnPage || reachedFourPages) {
+        if (reachedTop100 || noScoresOnPage || noNewScores || reachedFourPages) {
             page.release();
             finishLeaderboardResponse(call, scores);
             return;
@@ -136,7 +154,7 @@ public class LeaderboardPlugin extends Plugin {
                         finishLeaderboardResponse(call, scores);
                         return;
                     }
-                    loadScorePage(client, nextPage, scores, call, pageNumber + 1);
+                    loadScorePage(client, nextPage, scores, seenEntries, call, pageNumber + 1);
                 })
                 .addOnFailureListener(error -> {
                     page.release();
