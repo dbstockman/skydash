@@ -3123,6 +3123,7 @@ if(save.boosts > 0 && !bird.boostActive && !boostUsedThisRun) {
 // ── SCREENS ───────────────────────────────────────────────
 function showHome() {
   state = 'home';
+  updateHomeXpDisplay();
   document.getElementById('homeScreen').classList.remove('hidden');
   document.getElementById('gameoverScreen').classList.add('hidden');
   document.getElementById('hud').classList.add('hidden');
