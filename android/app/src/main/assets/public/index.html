@@ -3310,7 +3310,8 @@ if (reviveUsed || window.revivedThisRun) {
   document.getElementById('finalScore').textContent = sc;
   document.getElementById('bestScoreDisplay').textContent = save.best;
   document.getElementById('coinsEarned').textContent = `+${earned} 🪙 earned`;
-  document.getElementById('xpEarned').textContent = `+${sc * 10} XP ⭐`;
+document.getElementById('xpEarned').textContent =
+  `+${sc * 10 * (window.doubleXpActive ? 2 : 1)} XP ⭐`;
   // Update LB
   LB_PLAYERS.find(p => p.isYou).score = save.best;
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Leaderboard) {
