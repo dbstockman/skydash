@@ -727,6 +727,19 @@ function checkPlayerLevelUp() {
 
   persist();
 }
+function updateHomeXpDisplay() {
+  const needed = xpNeededForLevel(save.playerLevel);
+  const percent = Math.min(100, (save.xp / needed) * 100);
+
+  document.getElementById('playerLevelDisplay').textContent =
+    `⭐ BIRD LEVEL ${save.playerLevel}`;
+
+  document.getElementById('homeXpText').textContent =
+    `${save.xp} / ${needed} XP`;
+
+  document.getElementById('homeXpFill').style.width =
+    `${percent}%`;
+}
 let runXpAwarded = false;
 function awardRunXp(finalScore) {
   if (runXpAwarded) return 0;
