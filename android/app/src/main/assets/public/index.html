@@ -713,6 +713,8 @@ save.playerLevel = save.playerLevel || 1;
 save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'default' };
 save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'default' };
 save.lastEgg = save.lastEgg || 0;
+save.luckyEggActive = save.luckyEggActive || false;
+save.secondChanceActive = save.secondChanceActive || false;
 save.shields = save.shields || 1;
 save.boosts = save.boosts || 2;
 function persist() { localStorage.setItem('SkyDashSave', JSON.stringify(save)); }
@@ -3270,9 +3272,11 @@ ctx.clearRect(0, 0, W, H);
   cancelAnimationFrame(animId);
   loop();
 }
-function revivePlayer() {
-    reviveUsed = true;
-    window.revivedThisRun = true;
+function revivePlayer(consumeRevive = true) {
+ if (consumeRevive) {
+  reviveUsed = true;
+  window.revivedThisRun = true;
+}
     document.getElementById('reviveAdBtn').style.display = 'none';
     state = 'playing';
 
@@ -3290,7 +3294,26 @@ bird.invincibleTimer = 180;
   loop();
 }
 function showGameover(sc, earned) {
-  
+   // Second Chance — automatically revive once
+  if (save.secondChanceActive && !reviveUsed) {
+    save.secondChanceActive = false;
+    persist();
+
+    showNotif("❤️ SECOND CHANCE!");
+
+   setTimeout(() => {
+  revivePlayer(false);
+
+  // Second Chance does not consume normal revive
+  reviveUsed = false;
+  window.revivedThisRun = false;
+
+  document.getElementById('reviveAdBtn').classList.remove('forceHide');
+  document.getElementById('reviveGemBtn').classList.remove('forceHide');
+}, 500);
+
+    return;
+  }
 if (reviveUsed || window.revivedThisRun) {
   document.getElementById('reviveAdBtn').classList.add('forceHide');
   document.getElementById('reviveGemBtn').classList.add('forceHide');
@@ -3310,7 +3333,6 @@ document.getElementById('xpEarned').textContent =
   if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Leaderboard) {
   window.Capacitor.Plugins.Leaderboard.submitScore({ score: Math.floor(sc) })
   .then(() => {
-    alert("Google Play score ACCEPTED: " + Math.floor(sc));
   })
   .catch((error) => {
     alert("Google Play score REJECTED:\n" + JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
@@ -3945,8 +3967,7 @@ function updateEggUI() {
     setTimeout(updateEggUI, 1000);
   }
 }
-save.luckyEggActive = save.luckyEggActive || false;
-save.secondChanceActive = save.secondChanceActive || false;
+
 function crackEgg() {
 tapSound.currentTime = 0;
 tapSound.play().catch(() => {});
