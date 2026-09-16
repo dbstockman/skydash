@@ -559,6 +559,49 @@ style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(1
   <div id="storeGrid" class="shopGrid"></div>
 </div>
   <!-- LEADERBOARD PANEL -->
+
+  <!-- PURCHASE CONFIRMATION -->
+<div id="purchaseConfirm" class="hidden" style="
+  position:fixed;
+  inset:0;
+  z-index:999999;
+  background:rgba(0,0,0,0.75);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    width:300px;
+    padding:24px;
+    border-radius:20px;
+    background:linear-gradient(180deg,#17132b,#090713);
+    border:2px solid #8b5cf6;
+    box-shadow:0 0 30px rgba(139,92,246,.65);
+    text-align:center;
+  ">
+    <div id="purchaseConfirmTitle"
+        style="font-size:20px;font-weight:bold;margin-bottom:12px;">
+      Confirm Purchase
+    </div>
+
+    <div id="purchaseConfirmText"
+        style="font-size:14px;color:#ccc;margin-bottom:22px;">
+    </div>
+
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button id="purchaseCancelBtn" class="bigBtn"
+              style="width:120px;padding:12px;background:#444;">
+        NO
+      </button>
+
+      <button id="purchaseYesBtn" class="bigBtn"
+              style="width:120px;padding:12px;">
+        YES
+      </button>
+    </div>
+  </div>
+</div>
+
   <div class="panel hidden" id="lbPanel">
     <div class="panelHeader">
       <div class="panelTitle">🏆 LEADERBOARD</div>
@@ -737,7 +780,46 @@ storeItems: [
   gemPrice: 10,
   bonus: "Limit 1 each run"
 },
-
+{
+  id: "double_coins",
+  name: "2x Coins",
+  icon: "🪙",
+  coinPrice: 500,
+  gemPrice: 8,
+  bonus: "Double coins collected next run"
+},
+{
+  id: "double_xp",
+  name: "2x XP",
+  icon: "⭐",
+  coinPrice: 500,
+  gemPrice: 8,
+  bonus: "Double XP earned next run"
+},
+{
+  id: "lucky_egg",
+  name: "Lucky Egg",
+  icon: "🥚",
+  coinPrice: 750,
+  gemPrice: 10,
+  bonus: "Upgrade your next Mystery Egg"
+},
+{
+  id: "power_pack",
+  name: "Power Pack",
+  icon: "🎒",
+  coinPrice: 1500,
+  gemPrice: 25,
+  bonus: "2 Shields, 2 Boosts, 2 Magnets"
+},
+{
+  id: "second_chance",
+  name: "Second Chance",
+  icon: "❤️",
+  coinPrice: 1000,
+  gemPrice: 15,
+  bonus: "Automatically revive once next run"
+},
 {
   id: "starter_bundle",
   name: "Starter Bundle",
@@ -1798,7 +1880,7 @@ for (const p of enemyPlanes) {
   // Coin collection
   coins = coins.filter(c => {
     if(Math.hypot(c.x - bird.x, c.y - bird.y) < 22) {
-      save.coins += 1;
+      save.coins += window.doubleCoinsActive ? 2 : 1;
 
       setTimeout(() => {
   coinSound.currentTime = 0;
@@ -1905,7 +1987,7 @@ function die() {
   if(!bird.alive) return;
   bird.alive = false;
   state = 'dead';
-  const earned = Math.floor(score * 1.5);
+const earned = Math.floor(score * 1.5) * (window.doubleCoinsActive ? 2 : 1);
   save.coins += earned;
   if(score > save.best) save.best = score;
   persist();
@@ -2964,6 +3046,17 @@ function showHome() {
 
 function startGame() {
   state = 'playing';
+  save.coins = 10000;
+save.gems = 1000;
+persist();
+updateCoinDisplays();
+  window.doubleCoinsActive = save.doubleCoinsNextRun === true;
+
+if (window.doubleCoinsActive) {
+  save.doubleCoinsNextRun = false;
+  persist();
+  showNotif("🪙 2x Coins ACTIVE!");
+}
   document.getElementById('reviveAdBtn').classList.remove('forceHide');
   document.getElementById('reviveGemBtn').classList.remove('forceHide');
   document.getElementById('reviveAdBtn').style.display = 'block';
@@ -3243,6 +3336,63 @@ function renderStore() {
           `
       }
     `;
+// 2x Coins purchase
+if (item.id === "double_coins") {
+  const buyWithCoins = div.querySelector(".coinBuyBtn");
+  const buyWithGems = div.querySelector(".gemBuyBtn");
+
+  const activateDoubleCoins = (currency) => {
+    if (currency === "coins") {
+      if (save.coins < item.coinPrice) {
+        showNotif("Not enough coins! 🪙");
+        return;
+      }
+      save.coins -= item.coinPrice;
+    } else {
+      if (save.gems < item.gemPrice) {
+        showNotif("Not enough gems! 💎");
+        return;
+      }
+      save.gems -= item.gemPrice;
+    }
+
+    save.doubleCoinsNextRun = true;
+
+    persist();
+    updateCoinDisplays();
+    showNotif("🪙 2x Coins activated for next run!");
+  };
+
+const confirmPurchase = (currency) => {
+  const popup = document.getElementById("purchaseConfirm");
+  const title = document.getElementById("purchaseConfirmTitle");
+  const text = document.getElementById("purchaseConfirmText");
+  const yesBtn = document.getElementById("purchaseYesBtn");
+  const cancelBtn = document.getElementById("purchaseCancelBtn");
+
+  const cost = currency === "coins"
+    ? `${item.coinPrice} 🪙`
+    : `${item.gemPrice} 💎`;
+
+  title.textContent = "Purchase 2x Coins?";
+  text.textContent = `Activate 2x Coins for your next run for ${cost}?`;
+
+  popup.classList.remove("hidden");
+
+  yesBtn.onclick = () => {
+    popup.classList.add("hidden");
+    activateDoubleCoins(currency);
+  };
+
+  cancelBtn.onclick = () => {
+    popup.classList.add("hidden");
+  };
+};
+
+buyWithCoins.addEventListener("click", () => confirmPurchase("coins"));
+buyWithGems.addEventListener("click", () => confirmPurchase("gems"));
+
+}
 
     grid.appendChild(div);
   });
