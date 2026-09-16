@@ -3490,6 +3490,68 @@ function renderStore() {
           `
       }
     `;
+    // Coin Magnet purchase
+if (item.id === "coin_magnet") {
+  const buyWithCoins = div.querySelector(".coinBuyBtn");
+  const buyWithGems = div.querySelector(".gemBuyBtn");
+
+  const buyCoinMagnet = (currency) => {
+    if (currency === "coins") {
+      if (save.coins < item.coinPrice) {
+        showNotif("Not enough coins! 🪙");
+        return;
+      }
+      save.coins -= item.coinPrice;
+    } else {
+      if (save.gems < item.gemPrice) {
+        showNotif("Not enough gems! 💎");
+        return;
+      }
+      save.gems -= item.gemPrice;
+    }
+
+    save.magnets = (save.magnets || 0) + 1;
+
+    persist();
+    updateCoinDisplays();
+    showNotif(`🧲 Coin Magnet purchased! You have ${save.magnets}.`);
+  };
+
+  const confirmMagnetPurchase = (currency) => {
+    const popup = document.getElementById("purchaseConfirm");
+    const title = document.getElementById("purchaseConfirmTitle");
+    const text = document.getElementById("purchaseConfirmText");
+    const yesBtn = document.getElementById("purchaseYesBtn");
+    const cancelBtn = document.getElementById("purchaseCancelBtn");
+
+    const cost = currency === "coins"
+      ? `${item.coinPrice} 🪙`
+      : `${item.gemPrice} 💎`;
+
+    title.textContent = "Purchase Coin Magnet?";
+    text.textContent = `Buy 1 Coin Magnet for ${cost}?`;
+
+    popup.classList.remove("hidden");
+
+    yesBtn.onclick = () => {
+      popup.classList.add("hidden");
+      buyCoinMagnet(currency);
+    };
+
+    cancelBtn.onclick = () => {
+      popup.classList.add("hidden");
+    };
+  };
+
+  buyWithCoins.addEventListener("click", () =>
+    confirmMagnetPurchase("coins")
+  );
+
+  buyWithGems.addEventListener("click", () =>
+    confirmMagnetPurchase("gems")
+  );
+}
+
 // 2x Coins purchase
 if (item.id === "double_coins") {
   const buyWithCoins = div.querySelector(".coinBuyBtn");
