@@ -6,10 +6,10 @@ android {
     defaultConfig {
         applicationId "com.nexoragames.skydash"
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion 35
+        targetSdkVersion 36
         
-        versionCode 9
-        versionName "1.0.9"
+        versionCode 12
+        versionName "1.0.12"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

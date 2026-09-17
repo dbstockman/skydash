@@ -539,7 +539,7 @@ z-index: 51;
     <button class="bigBtn" id="playBtn">▶ PLAY</button>
     <div class="homeNav">
   <button type="button" class="navBtn" id="shopBtn" onclick="openShop()" ontouchstart="openShop()">🛍️ SHOP</button>
-<button type="button" class="navBtn" id="storeBtn" onclick="openStore()" ontouchstart="openStore()">💎 STORE</button>
+<button type="button" class="navBtn" id="storeBtn" onclick="openStore()">🛒 STORE</button>
 <button type="button" class="navBtn" id="lbBtn" onclick="openLb()" ontouchstart="openLb()">🏆 LEADERBOARD</button>
 <button type="button" class="navBtn" id="eggBtn" onclick="openEgg()" ontouchstart="openEgg()">🥚 EGG</button>
 
@@ -555,11 +555,6 @@ z-index: 51;
     <div class="coinsEarned" id="coinsEarned">+0 🪙</div>
    <div id="xpEarned">+0 XP ⭐</div> 
     <div class="goButtons" style="display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;">
-
-<button class="bigBtn" id="reviveGemBtn"
-style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(135deg,#8b5cf6,#6d28d9);">
-🟣 REVIVE - 25 GEMS
-</button>
 
 <button class="bigBtn" id="reviveAdBtn"
 style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(135deg,#22c55e,#15803d);">
@@ -902,24 +897,6 @@ storeItems: [
 },
 
 {
-  id: "shield_1_hit",
-  name: "1 Hit Shield",
-  icon: "🛡️",
-  coinPrice: 400,
-  gemPrice: 8,
-  bonus: "Limit 1 each run"
-},
-
-{
-  id: "pillar_boost",
-  name: "Pillar Boost",
-  icon: "🏛️",
-  coinPrice: 600,
-  gemPrice: 12,
-  bonus: "Limit 1 each run"
-},
-
-{
   id: "coin_magnet",
   name: "Coin Magnet",
   icon: "🧲",
@@ -960,13 +937,6 @@ storeItems: [
   gemPrice: 15,
   bonus: "Automatically revive once next run"
 },
-{
-  id: "starter_bundle",
-  name: "Starter Bundle",
-  icon: "🎁",
-  price: "$1.99",
-  bonus: "300 Gems, 3 Shields, 3 Boosts"
-}
 
 ],
   birds: [
@@ -3231,9 +3201,9 @@ if (window.doubleCoinsActive) {
   showNotif("🪙 2x Coins ACTIVE!");
 }
   document.getElementById('reviveAdBtn').classList.remove('forceHide');
-  document.getElementById('reviveGemBtn').classList.remove('forceHide');
+
   document.getElementById('reviveAdBtn').style.display = 'block';
-document.getElementById('reviveGemBtn').style.display = 'block';
+
   reviveUsed = false;
   window.revivedThisRun = false;
   boostUsedThisRun = false;
@@ -3311,17 +3281,17 @@ function showGameover(sc, earned) {
   window.revivedThisRun = false;
 
   document.getElementById('reviveAdBtn').classList.remove('forceHide');
-  document.getElementById('reviveGemBtn').classList.remove('forceHide');
+
 }, 500);
 
     return;
   }
 if (reviveUsed || window.revivedThisRun) {
   document.getElementById('reviveAdBtn').classList.add('forceHide');
-  document.getElementById('reviveGemBtn').classList.add('forceHide');
+
 } else {
   document.getElementById('reviveAdBtn').classList.remove('forceHide');
-  document.getElementById('reviveGemBtn').classList.remove('forceHide');
+
 }
   document.getElementById('gameoverScreen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
@@ -3349,17 +3319,6 @@ document.getElementById('retryBtn').addEventListener('click', () => {
   startGame();
 });
 
-document.getElementById('reviveGemBtn').addEventListener('click', () => {
-  if (reviveUsed || window.revivedThisRun) return;
-
-  if (gems >= 25) {
-    gems -= 25;
-    updateCurrency();
-    revivePlayer(true);
-  } else {
-    alert('Not enough gems!');
-  }
-});
 let rewardEarned = false;
 
 document.getElementById("reviveAdBtn").addEventListener("click", async () => {
@@ -3531,7 +3490,7 @@ function renderStore() {
 
       ${
         item.price
-          ? `<button class="storeBuyBtn">BUY ${item.price}</button>`
+  ? `<button class="storeBuyBtn" data-product-id="${item.id}">BUY ${item.price}</button>`
           : `
             <div class="storeBuyRow">
               <button class="coinBuyBtn">🪙 ${item.coinPrice}</button>
@@ -3540,6 +3499,26 @@ function renderStore() {
           `
       }
     `;
+    const realMoneyBtn = div.querySelector(".storeBuyBtn");
+
+if (realMoneyBtn) {
+  realMoneyBtn.onclick = async () => {
+  alert("PURCHASE BUTTON CLICKED");
+    try {
+      const NativePurchases = window.Capacitor.Plugins.NativePurchases;
+
+      await NativePurchases.purchaseProduct({
+        productIdentifier: item.id,
+        quantity: 1
+      });
+
+      alert("Purchase successful!");
+  } catch (err) {
+    console.error("Purchase failed:", err);
+    alert("PURCHASE ERROR: " + JSON.stringify(err));
+}
+  };
+}
     // Coin Magnet purchase
 if (item.id === "coin_magnet") {
   const buyWithCoins = div.querySelector(".coinBuyBtn");
