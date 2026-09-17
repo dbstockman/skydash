@@ -712,7 +712,7 @@ save.luckyEggActive = save.luckyEggActive || false;
 save.secondChanceActive = save.secondChanceActive || false;
 save.shields = save.shields || 1;
 save.boosts = save.boosts || 2;
-function persist() { localStorage.setItem('SkyDashSave', JSON.stringify(save)); }
+function persist() { localStorage.setItem('SKYDASHSave', JSON.stringify(save)); }
 function xpNeededForLevel(level) {
   return 500 + ((level - 1) * 250);
 }
@@ -3181,7 +3181,9 @@ function startGame() {
 save.gems = 1000;
 persist();
 updateCoinDisplays();
-  window.doubleCoinsActive = save.doubleCoinsNextRun === true;
+window.doubleCoinsActive =
+  save.doubleCoinsNextRun === true ||
+  localStorage.getItem("removeAdsOwned") === "true";
 window.coinMagnetActive = (save.magnets || 0) > 0;
 window.doubleXpActive = save.doubleXpNextRun === true;
 
@@ -3324,6 +3326,15 @@ let rewardEarned = false;
 document.getElementById("reviveAdBtn").addEventListener("click", async () => {
   try {
     if (reviveUsed) return
+    if (localStorage.getItem("removeAdsOwned") === "true") {
+  reviveUsed = true;
+
+  const gameOver = document.getElementById("gameOverScreen") || document.querySelector(".game-over");
+  if (gameOver) gameOver.classList.add("hidden");
+
+  revivePlayer();
+  return;
+}
     rewardEarned = false;
 
 await AdMob.adCreate({
@@ -3503,22 +3514,89 @@ function renderStore() {
 
 if (realMoneyBtn) {
   realMoneyBtn.onclick = async () => {
-  alert("PURCHASE BUTTON CLICKED");
+alert("BUY CLICK: " + item.id);
     try {
       const NativePurchases = window.Capacitor.Plugins.NativePurchases;
+console.time("SKYDASH_PRODUCT_LOOKUP");
+     const products = await NativePurchases.getProducts({
+productIdentifiers: [item.id],
+ productType: "inapp"
+});
+console.timeEnd("SKYDASH_PRODUCT_LOOKUP");
+alert("PRODUCT LOOKUP: " + JSON.stringify(products));
 
-      await NativePurchases.purchaseProduct({
-        productIdentifier: item.id,
-        quantity: 1
-      });
+console.time("SKYDASH_PURCHASE");
+console.log("SKYDASH_PURCHASE_CALL_START: " + new Date().toISOString());
+await NativePurchases.purchaseProduct({
+  productIdentifier: item.id,
+  productType: "inapp",
+  isConsumable: item.id.startsWith("gems_")
+});
+console.timeEnd("SKYDASH_PURCHASE");
+  if (item.id === "remove_ads") {
+  localStorage.setItem("removeAdsOwned", "true");
+  window.doubleCoinsActive = true;
+  alert("Purchase successful! Remove Ads unlocked.");
+} else {
+  const gemAmounts = {
+    gems_100: 100,
+    gems_550: 550,
+    gems_1200: 1200,
+    gems_3000: 3000
+  };
 
-      alert("Purchase successful!");
-  } catch (err) {
+  const amount = gemAmounts[item.id];
+
+  if (amount) {
+    save.gems += amount;
+    persist();
+    updateCoinDisplays();
+    alert("Purchase successful! +" + amount + " Gems");
+  }
+}
+} catch (err) {
     console.error("Purchase failed:", err);
-    alert("PURCHASE ERROR: " + JSON.stringify(err));
+
+    alert(
+      "PURCHASE ERROR\n" +
+      "message: " + (err?.message || "NONE") + "\n" +
+      "code: " + (err?.code || "NONE") + "\n" +
+      "name: " + (err?.name || "NONE") + "\n" +
+      "type: " + typeof err + "\n" +
+      "text: " + String(err)
+    );
 }
   };
 }
+// Restore Remove Ads ownership from Google Play
+async function restoreRemoveAdsOwnership() {
+  try {
+    const NativePurchases = window.Capacitor.Plugins.NativePurchases;
+
+    const result = await NativePurchases.getPurchases({
+      productType: "inapp"
+    });
+
+    console.log("OWNED PURCHASES:", result);
+
+    const purchases = result?.purchases || result || [];
+
+    const ownsRemoveAds = purchases.some(
+      purchase => purchase.productIdentifier === "remove_ads"
+    );
+
+    if (ownsRemoveAds) {
+      localStorage.setItem("removeAdsOwned", "true");
+      window.doubleCoinsActive = true;
+      console.log("Remove Ads ownership restored.");
+    }
+  } catch (err) {
+    console.error("Restore purchase check failed:", err);
+  }
+}
+
+restoreRemoveAdsOwnership();
+
     // Coin Magnet purchase
 if (item.id === "coin_magnet") {
   const buyWithCoins = div.querySelector(".coinBuyBtn");
