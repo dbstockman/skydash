@@ -707,6 +707,8 @@ save.xp = save.xp || 0;
 save.playerLevel = save.playerLevel || 1;
 save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'default' };
 save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'default' };
+save.owned.birds = save.owned.birds || [];
+save.equipped.birds = save.equipped.birds || 'default';
 save.lastEgg = save.lastEgg || 0;
 save.luckyEggActive = save.luckyEggActive || false;
 save.secondChanceActive = save.secondChanceActive || false;
@@ -841,16 +843,15 @@ const SHOP = {
   {id:'rainbow', name:'Rainbow', emoji:'🌈', price:1000},
   {id:'candy', name:'Candy', emoji:'🍬', price:2000},
   {id:'fire', name:'Fire', emoji:'🔥', price:4000},
-  {id:'golddust', name:'Gold Dust', emoji:'✨', price:15000},
   {id:'diamond', name:'Diamond', emoji:'💎', price:20000},
   ],
-  color: [
-  { id: "white", name: "White", emoji: "⚪", price: 200 },
-  { id: "green", name: "Green", emoji: "🟢", price: 500 },
-  { id: "blue", name: "Blue", emoji: "🔵", price: 1000 },
-  { id: "purple", name: "Purple", emoji: "🟣", price: 2000 },
-  { id: "gold", name: "Gold", emoji: "🟨", price: 5000 },
-  { id: "diamond", name: "Diamond", emoji: "💎", price: 5000 },
+color: [
+  { id: "white", name: "White", emoji: "⚪", price: 5000 },
+  { id: "green", name: "Green", emoji: "🟢", price: 5000 },
+  { id: "blue", name: "Blue", emoji: "🔵", price: 5000 },
+  { id: "purple", name: "Purple", emoji: "🟣", price: 5000 },
+  { id: "red", name: "Red", emoji: "🔴", price: 5000 },
+  { id: "black", name: "Black", emoji: "⚫", price: 5000 },
 ],
 storeItems: [
 
@@ -940,6 +941,7 @@ storeItems: [
 
 ],
   birds: [
+  { id:'default', name:'Original', emoji:'🐤', price:0, free:true },
   { id:'mockingbird', name:'Mockingbird', emoji:'🐦', price:500, currency:'gems' },
   { id:'toucan', name:'Toucan', emoji:'🦜', price:1000, currency:'gems' },
   { id:'chicken', name:'Chicken', emoji:'🐔', price:1500, currency:'gems' },
@@ -1142,6 +1144,36 @@ function drawBird() {
   const eq = save.equipped;
   const bx = bird.x, by = bird.y;
   const col = BIRD_COLORS[eq.color] || '#FFD700';
+    const birdEmojis = {
+    mockingbird: '🐦',
+    toucan: '🦜',
+    chicken: '🐔',
+    pelican: '🦢',
+    ostrich: '🦤',
+    owl: '🦉',
+    baldeagle: '🦅',
+    flamingo: '🦩',
+    hornbill: '🦜',
+    turkey: '🦃',
+    dodo: '🦤',
+    peacock: '🦚'
+  };
+
+  const selectedBird = birdEmojis[eq.birds];
+
+  if (selectedBird) {
+    ctx.save();
+    ctx.translate(bx, by);
+    ctx.rotate(bird.rotation);
+    ctx.scale(-1, 1);
+    ctx.font = '42px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(selectedBird, 0, 0);
+    ctx.restore();
+    return;
+  }
+
 // Revive invincibility flashing
 if (bird.invincible) {
   if (Math.floor(Date.now() / 120) % 2 === 0) {
@@ -3177,8 +3209,8 @@ function showHome() {
 function startGame() {
   runXpAwarded = false;
   state = 'playing';
-  save.coins = 10000;
-save.gems = 1000;
+  save.coins = 30000;
+save.gems = 5000;
 persist();
 updateCoinDisplays();
 window.doubleCoinsActive =
@@ -3462,18 +3494,31 @@ function renderShopTab(cat) {
         renderShopTab(cat);
         showNotif('Equipped '+item.name+'!');
       } else {
-        if(save.coins >= item.price) {
-          save.coins -= item.price;
-          // Mark owned
-          if(!save.owned[cat+'_'+item.id]) save.owned[cat+'_'+item.id] = true;
-          save.equipped[cat] = item.id;
-          persist();
-          updateCoinDisplays();
-          renderShopTab(cat);
-          showNotif('Bought & equipped '+item.name+'!');
-        } else {
-          showNotif('Not enough coins! 🪙');
-        }
+     if (item.currency === 'gems') {
+  if (save.gems >= item.price) {
+    save.gems -= item.price;
+    save.owned[cat+'_'+item.id] = true;
+    save.equipped[cat] = item.id;
+    persist();
+    updateCoinDisplays();
+    renderShopTab(cat);
+    showNotif('Bought & equipped '+item.name+'!');
+  } else {
+    showNotif('Not enough gems! 💎');
+  }
+} else {
+  if (save.coins >= item.price) {
+    save.coins -= item.price;
+    save.owned[cat+'_'+item.id] = true;
+    save.equipped[cat] = item.id;
+    persist();
+    updateCoinDisplays();
+    renderShopTab(cat);
+    showNotif('Bought & equipped '+item.name+'!');
+  } else {
+    showNotif('Not enough coins! 🪙');
+  }
+}
       }
     });
 
