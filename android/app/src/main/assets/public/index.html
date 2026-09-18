@@ -1133,6 +1133,125 @@ function drawBird() {
   const eq = save.equipped;
   const bx = bird.x, by = bird.y;
   const col = BIRD_COLORS[eq.color] || '#FFD700';
+// ── FALCON RIDER ──
+if (eq.birds === 'falcon') {
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(bird.rotation);
+
+  // Tail feathers
+  ctx.fillStyle = shadeColor(col, -50);
+  ctx.beginPath();
+  ctx.moveTo(-13, 5);
+  ctx.lineTo(-31, -5);
+  ctx.lineTo(-24, 7);
+  ctx.lineTo(-34, 15);
+  ctx.lineTo(-12, 13);
+  ctx.closePath();
+  ctx.fill();
+
+  // Main body
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 19, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Cream chest
+  ctx.fillStyle = '#ead7b7';
+  ctx.beginPath();
+  ctx.ellipse(7, 6, 11, 9, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Falcon wing
+  ctx.fillStyle = shadeColor(col, -45);
+  ctx.beginPath();
+  ctx.moveTo(-8, 0);
+  ctx.lineTo(-18, -23);
+  ctx.lineTo(-8, -17);
+  ctx.lineTo(-5, -29);
+  ctx.lineTo(2, -15);
+  ctx.lineTo(9, -23);
+  ctx.lineTo(8, -5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Wing feathers
+  ctx.fillStyle = shadeColor(col, 35);
+  ctx.beginPath();
+  ctx.moveTo(-5, -4);
+  ctx.lineTo(-11, -17);
+  ctx.lineTo(-3, -13);
+  ctx.lineTo(1, -21);
+  ctx.lineTo(5, -9);
+  ctx.closePath();
+  ctx.fill();
+
+  // Falcon head
+  ctx.fillStyle = shadeColor(col, -25);
+  ctx.beginPath();
+  ctx.arc(11, -6, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Cream face
+  ctx.fillStyle = '#f0dfbd';
+  ctx.beginPath();
+  ctx.moveTo(5, -10);
+  ctx.lineTo(18, -12);
+  ctx.lineTo(17, -4);
+  ctx.lineTo(8, 1);
+  ctx.closePath();
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(15, -8, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#d99000';
+  ctx.beginPath();
+  ctx.arc(16, -8, 2.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(16.5, -8, 1.4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Falcon brow
+  ctx.strokeStyle = '#2b1710';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(11, -13);
+  ctx.lineTo(19, -11);
+  ctx.stroke();
+
+  // Hooked beak
+  ctx.fillStyle = '#f4b400';
+  ctx.beginPath();
+  ctx.moveTo(20, -7);
+  ctx.lineTo(30, -3);
+  ctx.lineTo(22, 1);
+  ctx.lineTo(24, -3);
+  ctx.closePath();
+  ctx.fill();
+
+  // Black beak tip
+  ctx.fillStyle = '#181818';
+  ctx.beginPath();
+  ctx.moveTo(27, -4);
+  ctx.lineTo(31, -2);
+  ctx.lineTo(27, 1);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+  return;
+}
+
     const birdEmojis = {
     mockingbird: '🐦',
     toucan: '🦜',
