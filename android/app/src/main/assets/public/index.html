@@ -811,15 +811,15 @@ function awardRunXp(finalScore) {
 }
 // ── SHOP DATA ────────────────────────────────────────────
 const SHOP = {
-  hair: [
-    {id:'none', name:'No Hair', emoji:'🚫', price:0, free:true},
-  {id:'white', name:'White', emoji:'🤍', price:200},
-  {id:'green', name:'Green', emoji:'💚', price:500},
-  {id:'blue', name:'Blue', emoji:'💙', price:1000},
-  {id:'purple', name:'Purple', emoji:'💜', price:2000},
-  {id:'gold', name:'Gold', emoji:'👑', price:5000},
-  {id:'diamond', name:'Diamond', emoji:'💎', price:10000},
-  ],
+hair: [
+  {id:'none', name:'No Hat', emoji:'🚫', price:0, free:true},
+  {id:'green', name:'Military Helmet', emoji:'🪖', price:500},
+  {id:'blue', name:'Baseball Cap', emoji:'🧢', price:1000},
+  {id:'purple', name:'Top Hat', emoji:'🎩', price:2000},
+  {id:'gold', name:'Crown', emoji:'👑', price:5000},
+  {id:'white', name:'Graduation Cap', emoji:'🎓', price:7500},
+  {id:'diamond', name:'Bird Nest', emoji:'🪺', price:10000},
+],
   shoes: [
     {id:'none',    name:'Barefoot', emoji:'🚫', price:0,    free:true},
     {id:'sneaker', name:'Sneakers', emoji:'👟', price:200},
@@ -2112,6 +2112,98 @@ if (bird.invincible) {
 
   ctx.restore();
 }
+function drawShield() {
+  if (!bird.shieldActive) return;
+
+  ctx.save();
+  ctx.translate(bird.x, bird.y);
+
+  ctx.shadowColor = '#00FFFF';
+  ctx.shadowBlur = 30;
+
+  ctx.beginPath();
+  ctx.arc(0, 0, 28, 0, Math.PI * 2);
+
+  const sg = ctx.createRadialGradient(0, 0, 10, 0, 0, 28);
+  sg.addColorStop(0, 'rgba(0,255,255,0.1)');
+  sg.addColorStop(1, 'rgba(0,255,255,0.4)');
+
+  ctx.fillStyle = sg;
+  ctx.fill();
+
+  ctx.strokeStyle = '#00FFFF';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.restore();
+}
+function drawHats() {
+  const eq = save.equipped;
+
+  if (!eq.hair || eq.hair === 'none') return;
+
+  const hatMap = {
+    green: '🪖',    // Military Helmet
+    blue: '🧢',    // Baseball Cap
+    purple: '🎩',  // Top Hat
+    gold: '👑',    // Crown
+    white: '🎓',    // Graduation Cap
+    diamond: '🪺'  // Bird Nest
+  };
+
+  const hat = hatMap[eq.hair];
+  if (!hat) return;
+
+  ctx.save();
+
+  // Floating position above every bird
+  const hatX = bird.x + 2;
+  const hatY = bird.y - 29;
+
+  // Individual sizes so the hats look balanced
+  let hatSize = 19;
+
+  if (eq.hair === 'green') hatSize = 19;
+  if (eq.hair === 'blue') hatSize = 19;
+  if (eq.hair === 'purple') hatSize = 20;
+  if (eq.hair === 'gold') hatSize = 19;
+  if (eq.hair === 'white') hatSize = 20;
+  if (eq.hair === 'diamond') hatSize = 20;
+
+  ctx.font = `${hatSize}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.fillText(hat, hatX, hatY);
+
+  ctx.restore();
+}
+
+function drawShoes() {
+  const eq = save.equipped;
+
+  const shoeMap = {
+    sneaker:'👟',
+    boot:'🥾',
+    heel:'👠',
+    skate:'⛸️',
+    rocket:'🚀'
+  };
+
+  if (!eq.shoes || eq.shoes === 'none' || !shoeMap[eq.shoes]) return;
+
+  ctx.save();
+  ctx.font = '14px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Draw two shoes underneath every bird
+  ctx.fillText(shoeMap[eq.shoes], bird.x - 7, bird.y + 19);
+  ctx.fillText(shoeMap[eq.shoes], bird.x + 7, bird.y + 19);
+
+  ctx.restore();
+}
+
 function drawNecklace() {
   const eq = save.equipped;
   const neckMap = {
@@ -3974,8 +4066,11 @@ enemyBirds.forEach(e => {
 
 
   // Bird
-  drawBird();
-  drawNecklace();
+drawShield();
+drawBird();
+drawHats();
+drawShoes();
+drawNecklace();
   // Particles
   particles.forEach(p => {
     ctx.globalAlpha = p.life;
