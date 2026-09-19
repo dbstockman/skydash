@@ -943,6 +943,8 @@ storeItems: [
   birds: [
   { id:'default', name:'Original', emoji:'🐤', price:0, free:true },
   { id:'falcon', name:'Falcon Rider', emoji:'🦅', price:500, currency:'gems' },
+  { id:'owlrider', name:'Owl Rider', emoji:'🦉', price:750, currency:'gems' },
+  { id:'chickenrider', name:'Chicken Rider', emoji:'🐔', price:1000, currency:'gems' },
 ],
 };
 // Mark owned on startup
@@ -1247,6 +1249,240 @@ if (eq.birds === 'falcon') {
   ctx.lineTo(27, 1);
   ctx.closePath();
   ctx.fill();
+
+  ctx.restore();
+  return;
+}
+// ── OWL RIDER ──
+if (eq.birds === 'owlrider') {
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(bird.rotation);
+
+  // Tail feathers
+  ctx.fillStyle = shadeColor(col, -45);
+  ctx.beginPath();
+  ctx.moveTo(-13, 5);
+  ctx.lineTo(-29, -3);
+  ctx.lineTo(-25, 7);
+  ctx.lineTo(-31, 14);
+  ctx.lineTo(-11, 12);
+  ctx.closePath();
+  ctx.fill();
+
+  // Main body
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 18, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Light chest
+  ctx.fillStyle = '#ead7b7';
+  ctx.beginPath();
+  ctx.ellipse(6, 7, 10, 10, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Large flying wing
+  ctx.fillStyle = shadeColor(col, -35);
+  ctx.beginPath();
+  ctx.moveTo(-8, 0);
+  ctx.lineTo(-20, -26);
+  ctx.lineTo(-10, -21);
+  ctx.lineTo(-7, -32);
+  ctx.lineTo(0, -19);
+  ctx.lineTo(7, -27);
+  ctx.lineTo(8, -5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Wing feather highlights
+  ctx.fillStyle = shadeColor(col, 35);
+  ctx.beginPath();
+  ctx.moveTo(-7, -6);
+  ctx.lineTo(-13, -19);
+  ctx.lineTo(-5, -15);
+  ctx.lineTo(-1, -24);
+  ctx.lineTo(4, -11);
+  ctx.closePath();
+  ctx.fill();
+
+  // Owl head
+  ctx.fillStyle = shadeColor(col, -20);
+  ctx.beginPath();
+  ctx.arc(10, -7, 13, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Ear tufts
+  ctx.beginPath();
+  ctx.moveTo(1, -16);
+  ctx.lineTo(3, -27);
+  ctx.lineTo(9, -18);
+  ctx.moveTo(15, -18);
+  ctx.lineTo(21, -27);
+  ctx.lineTo(21, -14);
+  ctx.fill();
+
+  // Face
+  ctx.fillStyle = '#ead7b7';
+
+  ctx.beginPath();
+  ctx.arc(6, -8, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(16, -8, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eyes
+  ctx.fillStyle = '#f4b400';
+
+  ctx.beginPath();
+  ctx.arc(7, -8, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(16, -8, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#111';
+
+  ctx.beginPath();
+  ctx.arc(7, -8, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(16, -8, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Beak
+  ctx.fillStyle = '#f4a300';
+  ctx.beginPath();
+  ctx.moveTo(11, -3);
+  ctx.lineTo(17, 1);
+  ctx.lineTo(11, 4);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+  return;
+}
+// ── CHICKEN RIDER ──
+if (eq.birds === 'chickenrider') {
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(bird.rotation);
+
+  // Tail feathers
+  ctx.fillStyle = shadeColor(col, -30);
+  ctx.beginPath();
+  ctx.moveTo(-13, 5);
+  ctx.lineTo(-29, -5);
+  ctx.lineTo(-23, 5);
+  ctx.lineTo(-31, 12);
+  ctx.lineTo(-12, 13);
+  ctx.closePath();
+  ctx.fill();
+
+  // Round chicken body
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.ellipse(0, 3, 19, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Belly
+  ctx.fillStyle = shadeColor(col, 35);
+  ctx.beginPath();
+  ctx.ellipse(5, 7, 11, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Flying wing
+  ctx.fillStyle = shadeColor(col, -25);
+  ctx.beginPath();
+  ctx.moveTo(-7, 0);
+  ctx.lineTo(-20, -21);
+  ctx.lineTo(-10, -18);
+  ctx.lineTo(-5, -28);
+  ctx.lineTo(1, -17);
+  ctx.lineTo(7, -22);
+  ctx.lineTo(7, -4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Wing highlight
+  ctx.fillStyle = shadeColor(col, 35);
+  ctx.beginPath();
+  ctx.moveTo(-6, -5);
+  ctx.lineTo(-12, -17);
+  ctx.lineTo(-4, -13);
+  ctx.lineTo(0, -20);
+  ctx.lineTo(4, -9);
+  ctx.closePath();
+  ctx.fill();
+
+  // Chicken head
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.arc(12, -7, 11, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Red comb
+  ctx.fillStyle = '#e53935';
+  ctx.beginPath();
+  ctx.arc(5, -17, 4, 0, Math.PI * 2);
+  ctx.arc(11, -20, 5, 0, Math.PI * 2);
+  ctx.arc(17, -17, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Red wattle
+  ctx.beginPath();
+  ctx.ellipse(16, 2, 4, 7, 0.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(16, -8, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(17, -8, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Beak
+  ctx.fillStyle = '#f4a300';
+  ctx.beginPath();
+  ctx.moveTo(21, -6);
+  ctx.lineTo(31, -2);
+  ctx.lineTo(21, 2);
+  ctx.closePath();
+  ctx.fill();
+
+  // Feet
+  ctx.strokeStyle = '#f4a300';
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  ctx.moveTo(-3, 17);
+  ctx.lineTo(-5, 23);
+  ctx.lineTo(-10, 25);
+  ctx.moveTo(-5, 23);
+  ctx.lineTo(-1, 26);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(7, 17);
+  ctx.lineTo(6, 23);
+  ctx.lineTo(2, 26);
+  ctx.moveTo(6, 23);
+  ctx.lineTo(11, 25);
+  ctx.stroke();
 
   ctx.restore();
   return;
