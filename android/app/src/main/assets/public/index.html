@@ -2620,6 +2620,7 @@ e.y += e.vy || 0;
             bird.shieldTimer = 0;
             spawnParticles(bird.x, bird.y, '#00ff66', 20);
             showNotif('Shield blocked!');
+            triggerScreenShake(10);
           } else {
     titanPlayerHP--;
     damageFlash = 8;
@@ -2705,6 +2706,7 @@ if (bird.y + bird.radius > H - 40 && !bird.invincible && !bird.testInvincible) {
             bird.shieldTimer = 0;
             spawnParticles(bird.x, bird.y, '#FF8800', 20);
             showNotif('🛡️ Shield blocked!');
+            triggerScreenShake(10);
         } else {
             spawnParticles(bird.x, bird.y, '#FF3300', 20);
             die();
@@ -2761,7 +2763,7 @@ ctx.fill();
                 spawnParticles(bird.x, bird.y, '#FF8800', 20);
 
                 showNotif('🛡️ Shield blocked!');
-
+triggerScreenShake(10);
             } else {
 
                 spawnParticles(bird.x, bird.y, '#FF3300', 20);
@@ -2851,6 +2853,7 @@ if (bird.shieldActive) {
   bossDragon.fireLength = 0;
   spawnParticles(bird.x, bird.y, '#00FFFF', 20);
   showNotif('🛡 Shield blocked!');
+  triggerScreenShake(10);
 } else {
   die();
 }
@@ -2894,6 +2897,7 @@ if (hitMeteor && !bird.invincible && !bird.testInvincible) {
       bird.shieldTimer = 0;
       spawnParticles(bird.x, bird.y, '#00FFFF', 20);
       showNotif('🛡️ Shield blocked!');
+      triggerScreenShake(10);
       return false;
     } else {
       spawnParticles(bird.x, bird.y, '#FF4444', 20);
@@ -2962,6 +2966,7 @@ for (const m of mines) {
             bird.shieldTime = 0;
             spawnParticles(bird.x, bird.y, '#00FFFF', 20);
             showNotif('🛡️ Shield blocked!');
+            triggerScreenShake(10);
             mines = mines.filter(mm => mm !== m);
             break;
         } else {
@@ -2984,6 +2989,7 @@ for (const p of enemyPlanes) {
       bird.shieldTime = 0;
       spawnParticles(bird.x, bird.y, '#00FFFF', 20);
       showNotif('🛡 Shield blocked!');
+      triggerScreenShake(10);
       enemyPlanes = enemyPlanes.filter(ep => ep !== p);
       break;
     } else {
@@ -3108,6 +3114,7 @@ if (hit && !bird.invincible && !bird.testInvincible) {
         bird.shieldTimer = 0;
         spawnParticles(bird.x, bird.y, '#00FFFF', 20);
         showNotif('🛡️ Shield blocked!');
+        triggerScreenShake(10);
         // push pipe away
         p.x = bird.x - PIPE_W - 10;
       } else {
@@ -3131,7 +3138,23 @@ const earned = Math.floor(score * 1.5) * (window.doubleCoinsActive ? 2 : 1);
   setTimeout(() => showGameover(score, earned), 600);
 }
 
+
+function triggerScreenShake(amount = 6) {
+  screenShake = Math.max(screenShake, amount);
+}
 function draw() {
+  ctx.save();
+
+  if (screenShake > 0) {
+  const shakeX = (Math.random() - 0.5) * screenShake;
+  const shakeY = (Math.random() - 0.5) * screenShake;
+  ctx.translate(shakeX, shakeY);
+  screenShake *= 0.82;
+
+  if (screenShake < 0.5) {
+    screenShake = 0;
+  }
+}
   ctx.clearRect(0,0,W,H);
   drawBG();
   if (skyTitanMode && skyTitan.alive) {
@@ -4087,6 +4110,7 @@ drawNecklace();
   ctx.restore();
   damageFlash--;
 }
+ctx.restore();
 }
 let lastFrameTime = 0;
 const TARGET_FPS = 60;
