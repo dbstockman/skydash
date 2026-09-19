@@ -947,6 +947,8 @@ storeItems: [
   { id:'chickenrider', name:'Chicken Rider', emoji:'🐔', price:1000, currency:'gems' },
   { id:'rocketjay', name:'Rocket Jay', emoji:'🐦', price:1250, currency:'gems' },
 { id:'penguinace', name:'Penguin Ace', emoji:'🐧', price:1500, currency:'gems' },
+{ id:'babybird', name:'Baby Bird', emoji:'🐣', price:1750, currency:'gems' },
+{ id:'angrybird', name:'Angry Bird', emoji:'🔴', price:2000, currency:'gems' },
 ],
 };
 // Mark owned on startup
@@ -1724,6 +1726,252 @@ if (eq.birds === 'penguinace') {
   // Backpack
   ctx.fillStyle = '#754c24';
   ctx.fillRect(-16, -3, 6, 13);
+
+  ctx.restore();
+  return;
+}
+// ── BABY BIRD ──
+if (eq.birds === 'babybird') {
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(bird.rotation);
+
+  // Tiny tail feathers
+  ctx.fillStyle = shadeColor(col, -25);
+  ctx.beginPath();
+  ctx.moveTo(-12, 4);
+  ctx.lineTo(-24, -2);
+  ctx.lineTo(-20, 6);
+  ctx.lineTo(-25, 12);
+  ctx.lineTo(-10, 11);
+  ctx.closePath();
+  ctx.fill();
+
+  // Small round body
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 10;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.ellipse(-1, 4, 16, 14, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Soft belly
+  ctx.fillStyle = shadeColor(col, 35);
+  ctx.beginPath();
+  ctx.ellipse(4, 7, 10, 9, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tiny wing
+  ctx.fillStyle = shadeColor(col, -20);
+  ctx.beginPath();
+  ctx.moveTo(-7, 1);
+  ctx.lineTo(-18, -12);
+  ctx.lineTo(-12, 2);
+  ctx.lineTo(-18, 10);
+  ctx.lineTo(-3, 8);
+  ctx.closePath();
+  ctx.fill();
+
+  // Oversized baby head
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.arc(10, -8, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Baby feather tuft
+  ctx.fillStyle = shadeColor(col, -15);
+  ctx.beginPath();
+  ctx.moveTo(3, -19);
+  ctx.quadraticCurveTo(5, -30, 11, -21);
+  ctx.quadraticCurveTo(14, -31, 16, -19);
+  ctx.closePath();
+  ctx.fill();
+
+  // Huge white eye
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(15, -10, 7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Blue iris
+  ctx.fillStyle = '#42a5f5';
+  ctx.beginPath();
+  ctx.arc(17, -9, 4.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pupil
+  ctx.fillStyle = '#111111';
+  ctx.beginPath();
+  ctx.arc(18, -9, 2.7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Eye shine
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(19, -11, 1.3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tiny beak
+  ctx.fillStyle = '#f4a300';
+  ctx.beginPath();
+  ctx.moveTo(22, -5);
+  ctx.lineTo(29, -2);
+  ctx.lineTo(22, 1);
+  ctx.closePath();
+  ctx.fill();
+
+  // Pacifier ring
+  ctx.strokeStyle = '#29b6f6';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(22, 3, 5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Pacifier center
+  ctx.fillStyle = '#0288d1';
+  ctx.beginPath();
+  ctx.arc(22, 3, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tiny feet
+  ctx.strokeStyle = '#f4a300';
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(-4, 16);
+  ctx.lineTo(-6, 21);
+  ctx.lineTo(-10, 22);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(5, 17);
+  ctx.lineTo(5, 21);
+  ctx.lineTo(9, 22);
+  ctx.stroke();
+
+  ctx.restore();
+  return;
+}
+// ── ANGRY BIRD ──
+if (eq.birds === 'angrybird') {
+  ctx.save();
+  ctx.translate(bx, by);
+  ctx.rotate(bird.rotation);
+
+  // Sharp tail feathers
+  ctx.fillStyle = shadeColor(col, -50);
+  ctx.beginPath();
+  ctx.moveTo(-13, 3);
+  ctx.lineTo(-32, -8);
+  ctx.lineTo(-25, 4);
+  ctx.lineTo(-35, 12);
+  ctx.lineTo(-12, 12);
+  ctx.closePath();
+  ctx.fill();
+
+  // Main body
+  ctx.shadowColor = col;
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 20, 16, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Light chest
+  ctx.fillStyle = '#f1dfc2';
+  ctx.beginPath();
+  ctx.ellipse(7, 7, 11, 9, -0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Aggressive swept wing
+  ctx.fillStyle = shadeColor(col, -40);
+  ctx.beginPath();
+  ctx.moveTo(-8, 0);
+  ctx.lineTo(-23, -25);
+  ctx.lineTo(-11, -20);
+  ctx.lineTo(-8, -32);
+  ctx.lineTo(0, -19);
+  ctx.lineTo(7, -28);
+  ctx.lineTo(9, -5);
+  ctx.closePath();
+  ctx.fill();
+
+  // Wing highlight
+  ctx.fillStyle = shadeColor(col, 25);
+  ctx.beginPath();
+  ctx.moveTo(-6, -5);
+  ctx.lineTo(-13, -19);
+  ctx.lineTo(-5, -15);
+  ctx.lineTo(-1, -24);
+  ctx.lineTo(5, -10);
+  ctx.closePath();
+  ctx.fill();
+
+  // Head
+  ctx.fillStyle = col;
+  ctx.beginPath();
+  ctx.arc(11, -7, 12, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Spiked head feathers
+  ctx.fillStyle = shadeColor(col, -25);
+  ctx.beginPath();
+  ctx.moveTo(3, -16);
+  ctx.lineTo(-2, -27);
+  ctx.lineTo(8, -20);
+  ctx.lineTo(11, -30);
+  ctx.lineTo(16, -18);
+  ctx.lineTo(22, -25);
+  ctx.lineTo(20, -13);
+  ctx.closePath();
+  ctx.fill();
+
+  // Eye
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(16, -7, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Angry iris
+  ctx.fillStyle = '#d32f2f';
+  ctx.beginPath();
+  ctx.arc(18, -7, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Pupil
+  ctx.fillStyle = '#111111';
+  ctx.beginPath();
+  ctx.arc(19, -7, 1.7, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Heavy angry eyebrow
+  ctx.strokeStyle = '#181818';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(9, -15);
+  ctx.lineTo(21, -11);
+  ctx.stroke();
+
+  // Sharp beak
+  ctx.fillStyle = '#f4a300';
+  ctx.beginPath();
+  ctx.moveTo(21, -4);
+  ctx.lineTo(34, 0);
+  ctx.lineTo(21, 4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Dark beak tip
+  ctx.fillStyle = '#222222';
+  ctx.beginPath();
+  ctx.moveTo(30, -1);
+  ctx.lineTo(35, 0);
+  ctx.lineTo(30, 2);
+  ctx.closePath();
+  ctx.fill();
 
   ctx.restore();
   return;
