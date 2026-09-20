@@ -705,8 +705,15 @@ save.gems = save.gems || 0;
 save.best = save.best || 0;
 save.xp = save.xp || 0;
 save.playerLevel = save.playerLevel || 1;
-save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'default' };
-save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'default' };
+save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'gold' };
+save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'gold' };
+if (!save.owned.color || save.owned.color === 'default') {
+  save.owned.color = 'gold';
+}
+
+if (!save.equipped.color || save.equipped.color === 'default') {
+  save.equipped.color = 'gold';
+}
 save.owned.birds = save.owned.birds || [];
 save.equipped.birds = save.equipped.birds || 'default';
 save.lastEgg = save.lastEgg || 0;
@@ -846,6 +853,7 @@ hair: [
   {id:'diamond', name:'Diamond', emoji:'💎', price:20000},
   ],
 color: [
+  { id: "gold", name: "Gold", emoji: "🟡", price: 0, free: true },
   { id: "white", name: "White", emoji: "⚪", price: 5000 },
   { id: "green", name: "Green", emoji: "🟢", price: 5000 },
   { id: "blue", name: "Blue", emoji: "🔵", price: 5000 },
