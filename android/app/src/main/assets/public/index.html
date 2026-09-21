@@ -913,6 +913,158 @@ save.secondChanceActive = save.secondChanceActive || false;
 save.shields = save.shields || 1;
 save.boosts = save.boosts || 2;
 function persist() { localStorage.setItem('SKYDASHSave', JSON.stringify(save)); }
+// ── 14-DAY DAILY REWARD SYSTEM ──────────────────────────
+
+const DAILY_REWARDS = [
+  { coins: 500,  gems: 0,  icon: '🪙', label: '500' },
+  { coins: 750,  gems: 0,  icon: '🪙', label: '750' },
+  { coins: 1000, gems: 0,  icon: '🪙', label: '1K' },
+  { coins: 0,    gems: 25,  icon: '💎', label: '25' },
+  { coins: 1500, gems: 0,  icon: '🪙', label: '1.5K' },
+  { coins: 2000, gems: 0,  icon: '🪙', label: '2K' },
+  { coins: 2500, gems: 50,  icon: '🎁', label: '2.5K + 50💎' },
+
+  { coins: 3000, gems: 0,  icon: '🪙', label: '3K' },
+  { coins: 0,    gems: 75,  icon: '💎', label: '75' },
+  { coins: 4000, gems: 0,  icon: '🪙', label: '4K' },
+  { coins: 5000, gems: 0,  icon: '🪙', label: '5K' },
+  { coins: 0,    gems: 100, icon: '💎', label: '100' },
+  { coins: 7500, gems: 0,  icon: '🪙', label: '7.5K' },
+  { coins: 10000,gems: 250, icon: '🏆', label: '10K + 250💎' }
+];
+
+const DAILY_REWARD_WAIT = 24 * 60 * 60 * 1000;
+
+function dailyRewardReady() {
+  if (!save.lastDailyReward) return true;
+  return Date.now() - save.lastDailyReward >= DAILY_REWARD_WAIT;
+}
+
+function renderDailyRewards() {
+  const grid = document.getElementById('dailyRewardGrid');
+  if (!grid) return;
+
+  grid.innerHTML = '';
+
+  const currentDay = Math.min(Math.max(save.dailyRewardDay, 1), 14);
+
+  DAILY_REWARDS.forEach((reward, index) => {
+    const day = index + 1;
+    const card = document.createElement('div');
+
+    card.className = 'dailyRewardCard';
+
+    if (day < currentDay) {
+      card.classList.add('claimed');
+    } else if (day === currentDay) {
+      card.classList.add('today');
+    } else {
+      card.classList.add('locked');
+    }
+
+    if (day === 7) card.classList.add('milestone');
+    if (day === 14) card.classList.add('jackpot');
+
+    card.innerHTML = `
+      <div class="dayNumber">DAY ${day}</div>
+      <div class="rewardIcon">${reward.icon}</div>
+      <div class="rewardAmount">${reward.label}</div>
+    `;
+
+    grid.appendChild(card);
+  });
+
+  updateDailyRewardTimer();
+}
+
+function openDailyRewards() {
+  renderDailyRewards();
+  document.getElementById('dailyRewardsPanel').classList.remove('hidden');
+}
+
+function closeDailyRewards() {
+  document.getElementById('dailyRewardsPanel').classList.add('hidden');
+}
+
+function updateDailyRewardTimer() {
+  const button = document.getElementById('claimDailyRewardBtn');
+  const countdown = document.getElementById('dailyCountdown');
+  const label = document.getElementById('dailyTimerLabel');
+
+  if (!button || !countdown || !label) return;
+
+  if (dailyRewardReady()) {
+    button.disabled = false;
+    button.textContent = '🎁 CLAIM REWARD';
+    label.textContent = `DAY ${save.dailyRewardDay} REWARD READY!`;
+    countdown.textContent = 'CLAIM NOW';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = '🔒 COME BACK TOMORROW';
+  label.textContent = 'NEXT REWARD IN';
+
+  const remaining =
+    DAILY_REWARD_WAIT - (Date.now() - save.lastDailyReward);
+
+  const hours = Math.floor(remaining / 3600000);
+  const minutes = Math.floor((remaining % 3600000) / 60000);
+  const seconds = Math.floor((remaining % 60000) / 1000);
+
+  countdown.textContent =
+    `${String(hours).padStart(2,'0')}:` +
+    `${String(minutes).padStart(2,'0')}:` +
+    `${String(seconds).padStart(2,'0')}`;
+}
+
+function claimDailyReward() {
+  if (!dailyRewardReady()) return;
+
+  const day = Math.min(Math.max(save.dailyRewardDay, 1), 14);
+  const reward = DAILY_REWARDS[day - 1];
+
+  save.coins += reward.coins;
+  save.gems += reward.gems;
+  save.lastDailyReward = Date.now();
+  save.dailyRewardStreak = day;
+
+  let rewardText = '';
+
+  if (reward.coins > 0) {
+    rewardText += `${reward.coins.toLocaleString()} 🪙`;
+  }
+
+  if (reward.gems > 0) {
+    if (rewardText) rewardText += ' + ';
+    rewardText += `${reward.gems} 💎`;
+  }
+
+  if (day >= 14) {
+    save.dailyRewardDay = 1;
+    save.dailyRewardStreak = 0;
+  } else {
+    save.dailyRewardDay = day + 1;
+  }
+
+  persist();
+  updateCoinDisplays();
+
+  showNotif(`🎁 DAILY REWARD: ${rewardText}`);
+
+  renderDailyRewards();
+}
+
+document.getElementById('dailyRewardsBtn').addEventListener('click', openDailyRewards);
+document.getElementById('closeDailyRewards').addEventListener('click', closeDailyRewards);
+document.getElementById('claimDailyRewardBtn').addEventListener('click', claimDailyReward);
+
+setInterval(() => {
+  if (!document.getElementById('dailyRewardsPanel').classList.contains('hidden')) {
+    updateDailyRewardTimer();
+  }
+}, 1000);
+
 function xpNeededForLevel(level) {
   return 500 + ((level - 1) * 250);
 }
