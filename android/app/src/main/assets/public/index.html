@@ -1602,6 +1602,7 @@ function awardRunXp(finalScore) {
 
  const xpEarned = finalScore * 10 * (window.doubleXpActive ? 2 : 1);
   save.xp += xpEarned;
+  showXpGain(xpEarned);
   runXpAwarded = true;
 
   checkPlayerLevelUp();
