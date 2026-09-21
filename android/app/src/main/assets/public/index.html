@@ -1613,7 +1613,7 @@ function showBirdUnlockCelebration(birdId) {
     document.getElementById('birdUnlockCard').style.transform = 'scale(1)';
   });
   document.getElementById('equipUnlockedBird').addEventListener('click', () => {
-  save.equipped.bird = birdId;
+  save.equipped.birds = birdId;
   persist();
 
   overlay.style.opacity = '0';
@@ -5458,9 +5458,9 @@ if (rewardEarned && !reviveUsed) {
 });
 
 document.getElementById('goHomeBtn').addEventListener('click', () => {
-  awardRunXp(score);
   document.getElementById('gameoverScreen').classList.add('hidden');
   showHome();
+  awardRunXp(score);
 });
 function openPanel(e, openFn) {
   e.preventDefault();
