@@ -936,8 +936,21 @@ const DAILY_REWARDS = [
 const DAILY_REWARD_WAIT = 24 * 60 * 60 * 1000;
 
 function dailyRewardReady() {
-  if (!save.lastDailyReward) return true;
-  return Date.now() - save.lastDailyReward >= DAILY_REWARD_WAIT;
+if (!save.lastDailyReward) return true;
+
+if (save.dailyRewardCycleComplete) {
+  if (Date.now() - save.lastDailyReward >= DAILY_REWARD_WAIT) {
+    save.dailyRewardDay = 1;
+    save.dailyRewardStreak = 0;
+    save.dailyRewardCycleComplete = false;
+    persist();
+    return true;
+  }
+
+  return false;
+}
+
+return Date.now() - save.lastDailyReward >= DAILY_REWARD_WAIT;
 }
 
 function renderDailyRewards() {
@@ -1040,12 +1053,13 @@ function claimDailyReward() {
     rewardText += `${reward.gems} 💎`;
   }
 
-  if (day >= 14) {
-    save.dailyRewardDay = 1;
-    save.dailyRewardStreak = 0;
-  } else {
-    save.dailyRewardDay = day + 1;
-  }
+if (day >= 14) {
+  save.dailyRewardDay = 14;
+  save.dailyRewardStreak = 14;
+  save.dailyRewardCycleComplete = true;
+} else {
+  save.dailyRewardDay = day + 1;
+}
 
   persist();
   updateCoinDisplays();
