@@ -1374,9 +1374,54 @@ setInterval(() => {
     updateDailyRewardTimer();
   }
 }, 1000);
+// ── PLAYER LEVEL REWARDS ──────────────────────────────────
+const LEVEL_REWARDS = {
+  2:  { coins: 250,  gems: 0 },
+  3:  { coins: 0,    gems: 10 },
+  4:  { coins: 300,  gems: 0 },
+  5:  { coins: 0,    gems: 20 },
 
-function xpNeededForLevel(level) {
-  return 500 + ((level - 1) * 250);
+  6:  { coins: 400,  gems: 0 },
+  7:  { coins: 0,    gems: 15 },
+  8:  { coins: 500,  gems: 0 },
+  9:  { coins: 0,    gems: 20 },
+
+  10: { bird: 'rocketjay' },
+
+  15: { coins: 0,    gems: 50 },
+  20: { coins: 1500, gems: 0 },
+
+  25: { bird: 'owlrider' },
+
+  30: { coins: 2000, gems: 0 },
+  35: { coins: 0,    gems: 75 },
+  40: { coins: 0,    gems: 100 },
+  45: { coins: 3000, gems: 0 },
+
+  50: { bird: 'falcon' }
+};
+function awardLevelReward(level) {
+  const reward = LEVEL_REWARDS[level];
+  if (!reward) return;
+
+  if (reward.coins) {
+    save.coins += reward.coins;
+  }
+
+  if (reward.gems) {
+    save.gems += reward.gems;
+  }
+
+  if (reward.bird) {
+    save.owned.birds = save.owned.birds || [];
+
+    if (!save.owned.birds.includes(reward.bird)) {
+      save.owned.birds.push(reward.bird);
+    }
+  }
+
+  persist();
+  updateCoinDisplays();
 }
 function checkPlayerLevelUp() {
   let leveledUp = false;
@@ -1384,10 +1429,14 @@ function checkPlayerLevelUp() {
   while (save.xp >= xpNeededForLevel(save.playerLevel)) {
     save.xp -= xpNeededForLevel(save.playerLevel);
     save.playerLevel++;
+
+    awardLevelReward(save.playerLevel);
+
     leveledUp = true;
   }
 
   persist();
+  updateHomeXpDisplay();
 
   if (leveledUp) {
     showLevelUpAnimation();
