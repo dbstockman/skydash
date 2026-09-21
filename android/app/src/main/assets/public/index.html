@@ -1448,49 +1448,92 @@ function showLevelUpAnimation() {
   popup.innerHTML = `
     <div style="
       font-family:'Orbitron',sans-serif;
-      font-size:32px;
+      font-size:15px;
       font-weight:900;
-      color:#FFD700;
-      text-shadow:0 0 10px #FFD700,0 0 30px #FF00FF;
-      letter-spacing:3px;
-    ">⭐ LEVEL UP! ⭐</div>
+      color:#00FFFF;
+      letter-spacing:5px;
+      margin-bottom:8px;
+      text-shadow:0 0 12px #00FFFF;
+    ">LEVEL UP</div>
 
     <div style="
-      margin-top:10px;
       font-family:'Orbitron',sans-serif;
-      font-size:18px;
-      font-weight:700;
-      color:#00FFFF;
-      text-shadow:0 0 15px #00FFFF;
-    ">BIRD LEVEL ${save.playerLevel}</div>
+      font-size:58px;
+      line-height:1;
+      font-weight:900;
+      color:#FFD700;
+      text-shadow:
+        0 0 8px #FFD700,
+        0 0 22px #FF9900,
+        0 0 45px #FF00FF;
+    ">${save.playerLevel}</div>
+
+    <div style="
+      margin-top:9px;
+      font-family:'Orbitron',sans-serif;
+      font-size:13px;
+      font-weight:900;
+      color:#FFFFFF;
+      letter-spacing:3px;
+      text-shadow:0 0 12px #7B2FBE;
+    ">BIRD LEVEL</div>
+
+    <div style="
+      margin-top:14px;
+      font-size:26px;
+      filter:drop-shadow(0 0 10px #FFD700);
+    ">⭐ ✨ ⭐</div>
   `;
 
   popup.style.cssText = `
     position:fixed;
     top:50%;
     left:50%;
-    transform:translate(-50%,-50%) scale(0);
+    transform:translate(-50%,-50%) scale(.25);
     z-index:9999999;
     text-align:center;
     pointer-events:none;
-    transition:transform .35s ease, opacity .4s ease;
+    opacity:0;
+    padding:28px 38px;
+    border-radius:24px;
+    border:2px solid rgba(0,255,255,.8);
+    background:
+      radial-gradient(circle at center,
+      rgba(123,47,190,.95),
+      rgba(5,5,25,.97) 70%);
+    box-shadow:
+      0 0 20px #00FFFF,
+      0 0 55px rgba(123,47,190,.9),
+      inset 0 0 30px rgba(0,255,255,.15);
+    transition:
+      transform .45s cubic-bezier(.2,1.5,.4,1),
+      opacity .3s ease;
   `;
 
   document.body.appendChild(popup);
 
   requestAnimationFrame(() => {
-    popup.style.transform = 'translate(-50%,-50%) scale(1)';
+    popup.style.opacity = '1';
+    popup.style.transform =
+      'translate(-50%,-50%) scale(1)';
   });
 
   setTimeout(() => {
+    popup.style.transform =
+      'translate(-50%,-50%) scale(1.08)';
+  }, 500);
+
+  setTimeout(() => {
     popup.style.opacity = '0';
-    popup.style.transform = 'translate(-50%,-50%) scale(1.3)';
-  }, 1800);
+    popup.style.transform =
+      'translate(-50%,-50%) scale(1.35)';
+  }, 2100);
 
   setTimeout(() => {
     popup.remove();
-  }, 2300);
+  }, 2550);
 }
+
 
 function updateHomeXpDisplay() {
   const needed = xpNeededForLevel(save.playerLevel);
