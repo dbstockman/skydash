@@ -1032,6 +1032,57 @@ filter:brightness(1.15);
 
   </div>
 </div>
+<!-- LEVEL REWARDS PANEL -->
+<div class="screen hidden" id="levelRewardsPanel">
+  <div style="
+    width:350px;
+    max-height:610px;
+    padding:24px 18px;
+    border-radius:24px;
+    background:linear-gradient(180deg,#16082f,#080518);
+    border:1px solid #7B2FBE;
+    box-shadow:0 0 35px #7B2FBE88;
+    text-align:center;
+    overflow:hidden;
+  ">
+
+    <div style="
+      font-family:'Orbitron',sans-serif;
+      font-size:22px;
+      font-weight:900;
+      color:#FFD700;
+      letter-spacing:2px;
+      text-shadow:0 0 16px #FFD70088;
+    ">
+      ⭐ LEVEL REWARDS
+    </div>
+
+    <div id="levelRewardsCurrentLevel" style="
+      margin-top:8px;
+      color:#00FFFF;
+      font-weight:700;
+      letter-spacing:1px;
+    ">
+      BIRD LEVEL 1
+    </div>
+
+    <div style="
+      margin-top:18px;
+      height:465px;
+      overflow-y:auto;
+      padding-right:4px;
+    " id="levelRewardsList">
+    </div>
+
+    <button type="button" id="closeLevelRewards" class="navBtn" style="
+      width:100%;
+      margin-top:12px;
+    ">
+      ✕ CLOSE
+    </button>
+
+  </div>
+</div>
 
   <!-- GAME OVER SCREEN -->
   <div class="screen hidden" id="gameoverScreen">
@@ -1371,6 +1422,85 @@ if (day >= 14) {
 document.getElementById('dailyRewardsBtn').addEventListener('click', openDailyRewards);
 document.getElementById('closeDailyRewards').addEventListener('click', closeDailyRewards);
 document.getElementById('claimDailyRewardBtn').addEventListener('click', claimDailyReward);
+function renderLevelRewards() {
+  const list = document.getElementById('levelRewardsList');
+  const levelText = document.getElementById('levelRewardsCurrentLevel');
+
+  levelText.textContent = `BIRD LEVEL ${save.playerLevel}`;
+  list.innerHTML = '';
+
+  Object.entries(LEVEL_REWARDS).forEach(([level, reward]) => {
+    level = Number(level);
+
+    let rewardText = '';
+
+    if (reward.bird) {
+      const bird = SHOP.birds.find(b => b.id === reward.bird);
+      rewardText = `🐦 ${bird ? bird.name : reward.bird}`;
+    } else {
+      const parts = [];
+
+      if (reward.coins) parts.push(`🪙 ${reward.coins}`);
+      if (reward.gems) parts.push(`💎 ${reward.gems}`);
+
+      rewardText = parts.join('  ');
+    }
+
+    const unlocked = save.playerLevel >= level;
+
+    const card = document.createElement('div');
+
+    card.style.cssText = `
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 16px;
+      margin-bottom:10px;
+      border-radius:14px;
+      border:1px solid ${unlocked ? '#00FFFF' : '#7B2FBE88'};
+      background:${unlocked
+        ? 'rgba(0,255,255,.10)'
+        : 'rgba(123,47,190,.12)'};
+      box-shadow:${unlocked
+        ? '0 0 14px rgba(0,255,255,.20)'
+        : 'none'};
+    `;
+
+    card.innerHTML = `
+      <div style="
+        font-family:'Orbitron',sans-serif;
+        font-size:13px;
+        font-weight:900;
+        color:${unlocked ? '#00FFFF' : '#FFFFFF'};
+      ">
+        LEVEL ${level}
+      </div>
+
+      <div style="
+        font-size:14px;
+        font-weight:800;
+        color:${unlocked ? '#FFD700' : '#AAAAAA'};
+      ">
+        ${rewardText}
+      </div>
+
+      <div style="font-size:15px;">
+        ${unlocked ? '✓' : '🔒'}
+      </div>
+    `;
+
+    list.appendChild(card);
+  });
+}
+
+document.getElementById('levelRewardsBtn').addEventListener('click', () => {
+renderLevelRewards();
+  document.getElementById('levelRewardsPanel').classList.remove('hidden');
+});
+
+document.getElementById('closeLevelRewards').addEventListener('click', () => {
+  document.getElementById('levelRewardsPanel').classList.add('hidden');
+});
 
 setInterval(() => {
   if (!document.getElementById('dailyRewardsPanel').classList.contains('hidden')) {
@@ -1403,6 +1533,97 @@ const LEVEL_REWARDS = {
 
   50: { bird: 'falcon' }
 };
+function showBirdUnlockCelebration(birdId) {
+  const bird = SHOP.birds.find(b => b.id === birdId);
+  if (!bird) return;
+
+  const overlay = document.createElement('div');
+
+  overlay.style.cssText = `
+    position:fixed;
+    inset:0;
+    z-index:99999999;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(5,5,20,.88);
+    backdrop-filter:blur(8px);
+    opacity:0;
+    transition:opacity .35s ease;
+  `;
+
+  overlay.innerHTML = `
+    <div style="
+      width:320px;
+      padding:32px 22px;
+      text-align:center;
+      border-radius:26px;
+      background:radial-gradient(circle at top,#30105f,#080518 72%);
+      border:2px solid #FFD700;
+      box-shadow:
+        0 0 25px #FFD70088,
+        0 0 55px #7B2FBE88;
+      transform:scale(.6);
+      transition:transform .45s cubic-bezier(.2,1.5,.4,1);
+    " id="birdUnlockCard">
+
+      <div style="
+        font-family:'Orbitron',sans-serif;
+        font-size:14px;
+        font-weight:900;
+        color:#00FFFF;
+        letter-spacing:3px;
+      ">
+        NEW BIRD UNLOCKED!
+      </div>
+
+      <div style="
+        font-size:72px;
+        margin:18px 0 8px;
+        filter:drop-shadow(0 0 18px #FFD700);
+      ">
+        ${bird.emoji}
+      </div>
+
+      <div style="
+        font-family:'Orbitron',sans-serif;
+        font-size:24px;
+        font-weight:900;
+        color:#FFD700;
+        text-shadow:0 0 16px #FFD70088;
+      ">
+        ${bird.name}
+      </div>
+
+      <button id="equipUnlockedBird" class="bigBtn" style="
+        margin-top:24px;
+        width:230px;
+        padding:13px;
+        font-size:14px;
+      ">
+        EQUIP NOW
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  requestAnimationFrame(() => {
+    overlay.style.opacity = '1';
+    document.getElementById('birdUnlockCard').style.transform = 'scale(1)';
+  });
+  document.getElementById('equipUnlockedBird').addEventListener('click', () => {
+  save.equipped.bird = birdId;
+  persist();
+
+  overlay.style.opacity = '0';
+
+  setTimeout(() => {
+    overlay.remove();
+  }, 350);
+});
+}
+
 function awardLevelReward(level) {
   const reward = LEVEL_REWARDS[level];
   if (!reward) return;
@@ -1420,6 +1641,7 @@ function awardLevelReward(level) {
 
     if (!save.owned.birds.includes(reward.bird)) {
       save.owned.birds.push(reward.bird);
+      showBirdUnlockCelebration(reward.bird);
     }
   }
 
