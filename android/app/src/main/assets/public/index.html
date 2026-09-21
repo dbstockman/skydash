@@ -1534,6 +1534,54 @@ function showLevelUpAnimation() {
   }, 2550);
 }
 
+function showXpGain(amount) {
+  const xpPopup = document.createElement('div');
+
+  xpPopup.textContent = `+${amount} XP`;
+
+  xpPopup.style.cssText = `
+    position:absolute;
+    top:105px;
+    left:50%;
+    transform:translateX(-50%) translateY(0) scale(.8);
+    z-index:99999;
+    pointer-events:none;
+
+    font-family:'Orbitron',sans-serif;
+    font-size:16px;
+    font-weight:900;
+    letter-spacing:2px;
+
+    color:#00FFFF;
+    text-shadow:
+      0 0 6px #00FFFF,
+      0 0 14px #00FFFF,
+      0 0 24px #7B2FBE;
+
+    opacity:0;
+    transition:
+      transform .8s ease-out,
+      opacity .8s ease-out;
+  `;
+
+  document.getElementById('gameWrap').appendChild(xpPopup);
+
+  requestAnimationFrame(() => {
+    xpPopup.style.opacity = '1';
+    xpPopup.style.transform =
+      'translateX(-50%) translateY(-18px) scale(1)';
+  });
+
+  setTimeout(() => {
+    xpPopup.style.opacity = '0';
+    xpPopup.style.transform =
+      'translateX(-50%) translateY(-45px) scale(1.08)';
+  }, 450);
+
+  setTimeout(() => {
+    xpPopup.remove();
+  }, 1250);
+}
 
 function updateHomeXpDisplay() {
   const needed = xpNeededForLevel(save.playerLevel);
