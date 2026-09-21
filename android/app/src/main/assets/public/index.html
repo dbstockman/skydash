@@ -974,7 +974,9 @@ z-index: 51;
       height:100%;
       background:linear-gradient(90deg,#7B2FBE,#00FFFF);
       border-radius:10px;
-      transition:width .4s ease;
+     transition:width .55s cubic-bezier(.22,1,.36,1);
+box-shadow:0 0 8px #00FFFF, 0 0 16px #7B2FBE;
+filter:brightness(1.15);
     "></div>
   </div>
 
@@ -996,6 +998,7 @@ z-index: 51;
 <button type="button" class="navBtn" id="lbBtn" onclick="openLb()" ontouchstart="openLb()">🏆 LEADERBOARD</button>
 <button type="button" class="navBtn" id="eggBtn" onclick="openEgg()" ontouchstart="openEgg()">🥚 EGG</button>
 <button type="button" class="navBtn" id="dailyRewardsBtn">🎁 DAILY REWARDS</button>
+<button type="button" class="navBtn" id="levelRewardsBtn">⭐ LEVEL REWARDS</button>
 
 </div>
     <div style="margin-top:24px; font-size:12px; color:rgba(255,255,255,.3); letter-spacing:2px;">TAP TO FLAP · </div>
@@ -1587,15 +1590,37 @@ function updateHomeXpDisplay() {
   const needed = xpNeededForLevel(save.playerLevel);
   const percent = Math.min(100, (save.xp / needed) * 100);
 
-  document.getElementById('playerLevelDisplay').textContent =
+  const levelDisplay = document.getElementById('playerLevelDisplay');
+  const xpText = document.getElementById('homeXpText');
+  const xpFill = document.getElementById('homeXpFill');
+
+  levelDisplay.textContent =
     `⭐ BIRD LEVEL ${save.playerLevel}`;
 
-  document.getElementById('homeXpText').textContent =
+  xpText.textContent =
     `${save.xp} / ${needed} XP`;
 
-  document.getElementById('homeXpFill').style.width =
-    `${percent}%`;
+  xpFill.style.width = `${percent}%`;
+
+  xpFill.animate([
+    {
+      filter: 'brightness(1.15)',
+      boxShadow: '0 0 8px #00FFFF, 0 0 16px #7B2FBE'
+    },
+    {
+      filter: 'brightness(2)',
+      boxShadow: '0 0 18px #00FFFF, 0 0 32px #7B2FBE'
+    },
+    {
+      filter: 'brightness(1.15)',
+      boxShadow: '0 0 8px #00FFFF, 0 0 16px #7B2FBE'
+    }
+  ], {
+    duration: 650,
+    easing: 'ease-out'
+  });
 }
+
 let runXpAwarded = false;
 function awardRunXp(finalScore) {
   if (runXpAwarded) return 0;
