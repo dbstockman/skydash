@@ -1655,13 +1655,13 @@ function checkPlayerLevelUp() {
     save.xp -= xpNeededForLevel(save.playerLevel);
     save.playerLevel++;
 
-    awardLevelReward(save.playerLevel);
+awardLevelReward(save.playerLevel);
 
     leveledUp = true;
   }
 
   persist();
-  updateHomeXpDisplay();
+
 
   if (leveledUp) {
     showLevelUpAnimation();
@@ -1816,15 +1816,17 @@ function updateHomeXpDisplay() {
   const xpText = document.getElementById('homeXpText');
   const xpFill = document.getElementById('homeXpFill');
 
-levelDisplay.textContent =
-  `⭐ BIRD LEVEL ${save.playerLevel}`;
+  if (levelDisplay) {
+    levelDisplay.textContent = `⭐ BIRD LEVEL ${save.playerLevel}`;
+  }
 
-xpText.textContent =
-  `${save.xp} / ${needed} XP`;
+  if (xpText) {
+    xpText.textContent = `${save.xp} / ${needed} XP`;
+  }
 
-xpFill.style.width = `${percent}%`;
-
- 
+  if (xpFill) {
+    xpFill.style.width = `${percent}%`;
+  }
 }
 
 let runXpAwarded = false;
@@ -1833,6 +1835,7 @@ function awardRunXp(finalScore) {
 
  const xpEarned = finalScore * 10 * (window.doubleXpActive ? 2 : 1);
   save.xp += xpEarned;
+  alert(`XP DEBUG: earned=${xpEarned}, total=${save.xp}`);
   showXpGain(xpEarned);
   runXpAwarded = true;
 
@@ -5444,7 +5447,7 @@ document.getElementById('goHomeBtn').addEventListener('click', () => {
   document.getElementById('gameoverScreen').classList.add('hidden');
   showHome();
   awardRunXp(score);
-  updateHomeXpDisplay();
+ 
 });
 function openPanel(e, openFn) {
   e.preventDefault();
