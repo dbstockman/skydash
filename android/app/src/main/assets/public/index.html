@@ -5236,7 +5236,7 @@ if(save.boosts > 0 && !bird.boostActive && !boostUsedThisRun) {
 // ── SCREENS ───────────────────────────────────────────────
 function showHome() {
   state = 'home';
-// updateHomeXpDisplay();
+updateHomeXpDisplay();
   document.getElementById('homeScreen').classList.remove('hidden');
   document.getElementById('gameoverScreen').classList.add('hidden');
   document.getElementById('hud').classList.add('hidden');
@@ -5248,8 +5248,6 @@ draw();
 function startGame() {
   runXpAwarded = false;
   state = 'playing';
-  save.coins = 30000;
-save.gems = 5000;
 persist();
 updateCoinDisplays();
 window.doubleCoinsActive =
