@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">sskydash</string>
-    <string name="title_activity_main">sskydash</string>
+    <string name="app_name">SkyDash</string>
+    <string name="title_activity_main">SkyDash</string>
     <string name="package_name">com.nexoragames.skydash</string>
     <string name="custom_url_scheme">com.nexoragames.skydash</string>
     <string name="game_services_project_id" translatable="false">567300482388</string>
