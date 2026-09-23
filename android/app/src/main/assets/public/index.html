@@ -1447,7 +1447,8 @@ function renderLevelRewards() {
     }
 
     const unlocked = save.playerLevel >= level;
-
+save.claimedLevelRewards = save.claimedLevelRewards || [];
+const claimed = save.claimedLevelRewards.includes(level);
     const card = document.createElement('div');
 
     card.style.cssText = `
@@ -1484,9 +1485,33 @@ function renderLevelRewards() {
         ${rewardText}
       </div>
 
-      <div style="font-size:15px;">
-        ${unlocked ? '✓' : '🔒'}
-      </div>
+    <div>
+  ${
+    !unlocked
+      ? '<span style="font-size:18px;">🔒</span>'
+      : claimed
+        ? '<span style="font-size:20px;color:#00FFFF;">✓</span>'
+        : `<button
+            type="button"
+            onclick="claimLevelReward(${level})"
+            style="
+              border:none;
+              border-radius:9px;
+              padding:8px 10px;
+              background:linear-gradient(135deg,#FFD700,#FF8C00);
+              color:#111;
+              font-family:'Orbitron',sans-serif;
+              font-size:9px;
+              font-weight:900;
+              cursor:pointer;
+              box-shadow:0 0 12px rgba(255,215,0,.55);
+              white-space:nowrap;
+            ">
+            CLAIM
+          </button>`
+  }
+</div>
+
     `;
 
     list.appendChild(card);
@@ -1624,7 +1649,18 @@ function showBirdUnlockCelebration(birdId) {
 });
 }
 
-function awardLevelReward(level) {
+function claimLevelReward(level) {
+  level = Number(level);
+
+  // Player has not reached this level yet
+  if (save.playerLevel < level) return;
+
+  // Create claimed-rewards save data if it doesn't exist
+  save.claimedLevelRewards = save.claimedLevelRewards || [];
+
+  // Prevent claiming the same reward twice
+  if (save.claimedLevelRewards.includes(level)) return;
+
   const reward = LEVEL_REWARDS[level];
   if (!reward) return;
 
@@ -1645,9 +1681,14 @@ function awardLevelReward(level) {
     }
   }
 
+  // Mark this level reward as permanently claimed
+  save.claimedLevelRewards.push(level);
+
   persist();
   updateCoinDisplays();
+  renderLevelRewards();
 }
+
 function xpNeededForLevel(level) {
   return 500 + ((level - 1) * 100);
 }
@@ -1658,7 +1699,7 @@ function checkPlayerLevelUp() {
     save.xp -= xpNeededForLevel(save.playerLevel);
     save.playerLevel++;
 
-awardLevelReward(save.playerLevel);
+
 
     leveledUp = true;
   }
@@ -1755,11 +1796,11 @@ function showLevelUpAnimation() {
     popup.style.opacity = '0';
     popup.style.transform =
       'translate(-50%,-50%) scale(1.35)';
-  }, 2100);
+  }, 2500);
 
   setTimeout(() => {
     popup.remove();
-  }, 2550);
+  }, 3000);
 }
 
 function showXpGain(amount) {
@@ -1804,11 +1845,11 @@ function showXpGain(amount) {
     xpPopup.style.opacity = '0';
     xpPopup.style.transform =
       'translateX(-50%) translateY(-45px) scale(1.08)';
-  }, 450);
+  }, 2000);
 
   setTimeout(() => {
     xpPopup.remove();
-  }, 1250);
+  }, 2800);
 }
 
 function updateHomeXpDisplay() {
