@@ -4018,7 +4018,7 @@ if (hitBird && !bird.invincible && !bird.testInvincible && !bird.shieldActive) {
       });
     }
   }
- // Mine spawning test
+ // Mine spawning 
 mineTimer++;
 
 if (pipes.length > 0 &&
@@ -5127,7 +5127,7 @@ enemyEggs.forEach(e => {
 });
   // Trail
   drawTrail();
-  // Enemy birds - visual only test
+  // Enemy birds - visual 
 enemyBirds.forEach(e => {
   ctx.save();
   ctx.translate(e.x, e.y);
@@ -5643,25 +5643,25 @@ function renderStore() {
 
 if (realMoneyBtn) {
   realMoneyBtn.onclick = async () => {
-alert("BUY CLICK: " + item.id);
+
     try {
       const NativePurchases = window.Capacitor.Plugins.NativePurchases;
-console.time("SKYDASH_PRODUCT_LOOKUP");
+
      const products = await NativePurchases.getProducts({
 productIdentifiers: [item.id],
  productType: "inapp"
 });
-console.timeEnd("SKYDASH_PRODUCT_LOOKUP");
-alert("PRODUCT LOOKUP: " + JSON.stringify(products));
 
-console.time("SKYDASH_PURCHASE");
-console.log("SKYDASH_PURCHASE_CALL_START: " + new Date().toISOString());
+
+
+
+
 await NativePurchases.purchaseProduct({
   productIdentifier: item.id,
   productType: "inapp",
   isConsumable: item.id.startsWith("gems_")
 });
-console.timeEnd("SKYDASH_PURCHASE");
+
   if (item.id === "remove_ads") {
   localStorage.setItem("removeAdsOwned", "true");
   window.doubleCoinsActive = true;
