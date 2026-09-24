@@ -5424,7 +5424,7 @@ document.getElementById('xpEarned').textContent =
   .then(() => {
   })
   .catch((error) => {
-    alert("Google Play score REJECTED:\n" + JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+console.error("Google Play score submission failed:", error);
   });
 }
 }
@@ -5464,17 +5464,17 @@ await AdMob.adShow({ id: 1 });
 
   } catch (err) {
     console.error("Reward ad failed:", err);
-    alert("Ad failed: " + (err.message || JSON.stringify(err)));
+showNotif("Ad unavailable. Please try again.");
   }
 });
 
 AdMob.addListener('rewarded.reward', () => {
-  console.log("✅ Reward earned");
+ 
   rewardEarned = true;
 });
 
 AdMob.addListener('rewarded.dismiss', () => {
-  console.log("Ad dismissed. rewardEarned =", rewardEarned);
+
 
 if (rewardEarned && !reviveUsed) {
     rewardEarned = false;
@@ -5706,7 +5706,7 @@ async function restoreRemoveAdsOwnership() {
       productType: "inapp"
     });
 
-    console.log("OWNED PURCHASES:", result);
+   
 
     const purchases = result?.purchases || result || [];
 
@@ -5717,7 +5717,7 @@ async function restoreRemoveAdsOwnership() {
     if (ownsRemoveAds) {
       localStorage.setItem("removeAdsOwned", "true");
       window.doubleCoinsActive = true;
-      console.log("Remove Ads ownership restored.");
+     
     }
   } catch (err) {
     console.error("Restore purchase check failed:", err);
