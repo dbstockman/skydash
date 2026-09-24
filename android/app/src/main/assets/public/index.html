@@ -1873,15 +1873,18 @@ function updateHomeXpDisplay() {
   }
 }
 
-let runXpAwarded = false;
+let runXpAwarded = 0;
+
 function awardRunXp(finalScore) {
-  if (runXpAwarded) return 0;
+  const totalRunXp = finalScore * 10 * (window.doubleXpActive ? 2 : 1);
+  const xpEarned = Math.max(0, totalRunXp - runXpAwarded);
 
- const xpEarned = finalScore * 10 * (window.doubleXpActive ? 2 : 1);
+  if (xpEarned <= 0) return 0;
+
   save.xp += xpEarned;
-  showXpGain(xpEarned);
-  runXpAwarded = true;
+  runXpAwarded = totalRunXp;
 
+  showXpGain(xpEarned);
   checkPlayerLevelUp();
   persist();
 
@@ -5292,7 +5295,7 @@ draw();
 }
 
 function startGame() {
-  runXpAwarded = false;
+  runXpAwarded = 0;
   state = 'playing';
 persist();
 updateCoinDisplays();
