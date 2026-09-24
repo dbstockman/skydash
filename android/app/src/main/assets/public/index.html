@@ -5686,14 +5686,7 @@ await NativePurchases.purchaseProduct({
 } catch (err) {
     console.error("Purchase failed:", err);
 
-    alert(
-      "PURCHASE ERROR\n" +
-      "message: " + (err?.message || "NONE") + "\n" +
-      "code: " + (err?.code || "NONE") + "\n" +
-      "name: " + (err?.name || "NONE") + "\n" +
-      "type: " + typeof err + "\n" +
-      "text: " + String(err)
-    );
+alert("Purchase couldn't be completed. Please try again.");
 }
   };
 }
