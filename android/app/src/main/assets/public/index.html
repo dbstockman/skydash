@@ -1949,7 +1949,7 @@ storeItems: [
   name: "Remove Ads",
   icon: "🚫",
   price: "$2.99",
-  bonus: "+ Free Revives and x2 Coins"
+ bonus: "+ Free Revives"
 },
 
 {
@@ -5313,8 +5313,7 @@ function startGame() {
 persist();
 updateCoinDisplays();
 window.doubleCoinsActive =
-  save.doubleCoinsNextRun === true ||
-  localStorage.getItem("removeAdsOwned") === "true";
+  save.doubleCoinsNextRun === true;
 window.coinMagnetActive = (save.magnets || 0) > 0;
 window.doubleXpActive = save.doubleXpNextRun === true;
 
@@ -5730,7 +5729,6 @@ await NativePurchases.purchaseProduct({
 
   if (item.id === "remove_ads") {
   localStorage.setItem("removeAdsOwned", "true");
-  window.doubleCoinsActive = true;
   alert("Purchase successful! Remove Ads unlocked.");
 } else {
   const gemAmounts = {
@@ -5775,7 +5773,6 @@ async function restoreRemoveAdsOwnership() {
 
     if (ownsRemoveAds) {
       localStorage.setItem("removeAdsOwned", "true");
-      window.doubleCoinsActive = true;
      
     }
   } catch (err) {
