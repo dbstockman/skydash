@@ -1243,8 +1243,8 @@ let save = JSON.parse(localStorage.getItem('SKYDASHSave') || '{}');
 save.coins = save.coins || 0;
 save.gems = save.gems || 0;
 save.best = save.best || 0;
-save.xp = 1290;
-save.playerLevel = 9;
+save.xp = save.xp || 0;
+save.playerLevel = save.playerLevel || 1;
 save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'gold' };
 save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'gold' };
 if (!save.owned.color || save.owned.color === 'default') {
@@ -1547,7 +1547,7 @@ const LEVEL_REWARDS = {
   8:  { coins: 500,  gems: 0 },
   9:  { coins: 0,    gems: 20 },
 
-  10: { bird: 'rocketjay' },
+  10: { bird: 'falcon' },
 
   15: { coins: 0,    gems: 50 },
   20: { coins: 1500, gems: 0 },
@@ -1559,7 +1559,7 @@ const LEVEL_REWARDS = {
   40: { coins: 0,    gems: 100 },
   45: { coins: 3000, gems: 0 },
 
-  50: { bird: 'falcon' }
+  50: { bird: 'rocketjay' }
 };
 function showBirdUnlockCelebration(birdId) {
   const bird = SHOP.birds.find(b => b.id === birdId);
