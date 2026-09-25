@@ -1243,8 +1243,8 @@ let save = JSON.parse(localStorage.getItem('SKYDASHSave') || '{}');
 save.coins = save.coins || 0;
 save.gems = save.gems || 0;
 save.best = save.best || 0;
-save.xp = save.xp || 0;
-save.playerLevel = save.playerLevel || 1;
+save.xp = 1290;
+save.playerLevel = 9;
 save.owned = save.owned || { hair:'none', shoes:'none', neck:'none', trail:'none', color:'gold' };
 save.equipped = save.equipped || { hair:'none', shoes:'none', neck:'none', trail:'default', color:'gold' };
 if (!save.owned.color || save.owned.color === 'default') {
