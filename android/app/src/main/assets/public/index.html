@@ -1097,7 +1097,10 @@ filter:brightness(1.15);
 style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(135deg,#22c55e,#15803d);">
 ▶ WATCH AD TO REVIVE
 </button>
-
+<button class="bigBtn" id="doubleCoinsAdBtn"
+style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(135deg,#FFD700,#FF8C00);">
+▶ WATCH AD — 2× COINS
+</button>
 <button class="bigBtn" id="retryBtn"
 style="width:260px;padding:14px 16px;font-size:14px;">
 ↻ RETRY
@@ -2062,6 +2065,7 @@ const LB_PLAYERS = [
 let state = 'home'; // home | playing | dead
 let score = 0;
 let reviveUsed = false;
+let doubleCoinsAdUsed = false;
 let boostUsedThisRun = false;
 let frame = 0;
 let animId;
@@ -5329,6 +5333,7 @@ if (window.doubleCoinsActive) {
   document.getElementById('reviveAdBtn').style.display = 'block';
 
   reviveUsed = false;
+  doubleCoinsAdUsed = false;
   window.revivedThisRun = false;
   boostUsedThisRun = false;
   shieldUsedThisRun = false;
@@ -5416,7 +5421,11 @@ if (reviveUsed || window.revivedThisRun) {
 
 } else {
   document.getElementById('reviveAdBtn').classList.remove('forceHide');
-
+if (doubleCoinsAdUsed) {
+  document.getElementById('doubleCoinsAdBtn').style.display = 'none';
+} else {
+  document.getElementById('doubleCoinsAdBtn').style.display = 'block';
+}
 }
   document.getElementById('gameoverScreen').classList.remove('hidden');
   document.getElementById('hud').classList.add('hidden');
@@ -5445,10 +5454,11 @@ document.getElementById('retryBtn').addEventListener('click', () => {
 });
 
 let rewardEarned = false;
-
+let activeRewardType = null;
 document.getElementById("reviveAdBtn").addEventListener("click", async () => {
   try {
     if (reviveUsed) return
+    activeRewardType = "revive";
     if (localStorage.getItem("removeAdsOwned") === "true") {
   reviveUsed = true;
 
@@ -5493,6 +5503,45 @@ if (rewardEarned && !reviveUsed) {
 
     revivePlayer();
 }
+});
+let doubleCoinsRewardEarned = false;
+
+document.getElementById("doubleCoinsAdBtn").addEventListener("click", async () => {
+  try {
+    if (doubleCoinsAdUsed) return;
+activeRewardType = "doubleCoins";
+    doubleCoinsRewardEarned = false;
+
+    await AdMob.adCreate({
+      id: 2,
+      cls: "RewardedAd",
+      adUnitId: "ca-app-pub-6948432529753933/3938486442"
+    });
+
+    await AdMob.adLoad({ id: 2 });
+    await AdMob.adShow({ id: 2 });
+
+  } catch (err) {
+    console.error("2x coins reward ad failed:", err);
+    showNotif("Ad unavailable. Please try again.");
+  }
+});
+
+AdMob.addListener('rewarded.reward', (info) => {
+  if (info && info.id === 2) {
+    doubleCoinsRewardEarned = true;
+  }
+});
+
+AdMob.addListener('rewarded.dismiss', (info) => {
+  if (info && info.id === 2 && doubleCoinsRewardEarned && !doubleCoinsAdUsed) {
+    doubleCoinsRewardEarned = false;
+    doubleCoinsAdUsed = true;
+
+    document.getElementById("doubleCoinsAdBtn").style.display = "none";
+
+    showNotif("🪙 2x COINS REWARD CLAIMED!");
+  }
 });
 
 document.getElementById('goHomeBtn').addEventListener('click', () => {
