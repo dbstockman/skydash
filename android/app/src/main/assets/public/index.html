@@ -2066,6 +2066,8 @@ let state = 'home'; // home | playing | dead
 let score = 0;
 let reviveUsed = false;
 let doubleCoinsAdUsed = false;
+let runCoinsAwarded = 0;
+let doubleCoinsAdActive = false;
 let boostUsedThisRun = false;
 let frame = 0;
 let animId;
@@ -4112,7 +4114,9 @@ for (const p of enemyPlanes) {
   // Coin collection
   coins = coins.filter(c => {
     if(Math.hypot(c.x - bird.x, c.y - bird.y) < 22) {
-      save.coins += window.doubleCoinsActive ? 2 : 1;
+     const coinValue = window.doubleCoinsActive ? 2 : 1;
+save.coins += doubleCoinsAdActive ? coinValue * 2 : coinValue;
+runCoinsAwarded += coinValue;
 
       setTimeout(() => {
   coinSound.currentTime = 0;
@@ -4221,7 +4225,8 @@ function die() {
   bird.alive = false;
   state = 'dead';
 const earned = Math.floor(score * 1.5) * (window.doubleCoinsActive ? 2 : 1);
-  save.coins += earned;
+save.coins += doubleCoinsAdActive ? earned * 2 : earned;
+runCoinsAwarded += earned;
   if(score > save.best) save.best = score;
   persist();
   updateCoinDisplays();
@@ -5334,6 +5339,8 @@ if (window.doubleCoinsActive) {
 
   reviveUsed = false;
   doubleCoinsAdUsed = false;
+  runCoinsAwarded = 0;
+doubleCoinsAdActive = false;
   window.revivedThisRun = false;
   boostUsedThisRun = false;
   shieldUsedThisRun = false;
@@ -5487,22 +5494,26 @@ showNotif("Ad unavailable. Please try again.");
 });
 
 AdMob.addListener('rewarded.reward', () => {
- 
-  rewardEarned = true;
+  if (activeRewardType === "revive") {
+    rewardEarned = true;
+  }
+
+  if (activeRewardType === "doubleCoins") {
+    doubleCoinsRewardEarned = true;
+  }
 });
 
 AdMob.addListener('rewarded.dismiss', () => {
-
-
-if (rewardEarned && !reviveUsed) {
+  if (activeRewardType === "revive" && rewardEarned && !reviveUsed) {
     rewardEarned = false;
     reviveUsed = true;
+    activeRewardType = null;
 
     const gameOver = document.getElementById("gameOverScreen") || document.querySelector(".game-over");
     if (gameOver) gameOver.classList.add("hidden");
 
     revivePlayer();
-}
+  }
 });
 let doubleCoinsRewardEarned = false;
 
@@ -5527,17 +5538,15 @@ activeRewardType = "doubleCoins";
   }
 });
 
-AdMob.addListener('rewarded.reward', (info) => {
-  if (info && info.id === 2) {
-    doubleCoinsRewardEarned = true;
-  }
-});
-
-AdMob.addListener('rewarded.dismiss', (info) => {
-  if (info && info.id === 2 && doubleCoinsRewardEarned && !doubleCoinsAdUsed) {
+AdMob.addListener('rewarded.dismiss', () => {
+  if (activeRewardType === "doubleCoins" && doubleCoinsRewardEarned && !doubleCoinsAdUsed) {
     doubleCoinsRewardEarned = false;
     doubleCoinsAdUsed = true;
-
+    activeRewardType = null;
+save.coins += runCoinsAwarded;
+doubleCoinsAdActive = true;
+persist();
+updateCoinDisplays();
     document.getElementById("doubleCoinsAdBtn").style.display = "none";
 
     showNotif("🪙 2x COINS REWARD CLAIMED!");
