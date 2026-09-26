@@ -1588,6 +1588,7 @@ if (day >= 14) {
   updateCoinDisplays();
 
   showNotif(`🎁 DAILY REWARD: ${rewardText}`);
+  AUDIO.play('reward', 0.9);
 
   renderDailyRewards();
 }
