@@ -1211,16 +1211,76 @@ style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(1
 </div>
 
 <script>
-const tapSound = new Audio('https://cdn.freesound.org/previews/250/250133_4486188-lq.mp3');
-tapSound.volume = 0.7;
-tapSound.volume = 1.0;
-const coinSound = new Audio('https://www.orangefreesounds.com/wp-content/uploads/2018/09/Coin-drop-on-coins.mp3');
-coinSound.volume = 1.0;
-const boostSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-fast-rocket-whoosh-1714.mp3');
-const crashSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.mp3');
-const hitSound = new Audio("universfield-punch-140236.mp3");
-hitSound.volume = 1.0;
-const AdMob = window.Capacitor?.Plugins?.AdMobPlus || window.Capacitor?.Plugins?.AdMob;
+// ═══════════════════════════════════════════════════════
+// SKYDASH AUDIO SYSTEM
+// ═══════════════════════════════════════════════════════
+
+const AUDIO = {
+  sfxVolume: 0.85,
+  musicVolume: 0.35,
+  muted: false,
+
+  sounds: {
+    flap: new Audio('audio/flap.mp3'),
+    score: new Audio('audio/score.mp3'),
+    hit: new Audio('audio/hit.mp3'),
+    crash: new Audio('audio/crash.mp3'),
+    boost: new Audio('audio/boost.mp3'),
+    shield: new Audio('audio/shield.mp3'),
+    revive: new Audio('audio/revive.mp3'),
+    reward: new Audio('audio/reward.mp3'),
+    levelUp: new Audio('audio/levelup.mp3')
+  },
+
+  music: new Audio('audio/music.mp3'),
+
+  play(name, volume = 1) {
+    if (this.muted) return;
+
+    const sound = this.sounds[name];
+    if (!sound) return;
+
+    try {
+      sound.pause();
+      sound.currentTime = 0;
+      sound.volume = Math.min(1, this.sfxVolume * volume);
+
+      const playPromise = sound.play();
+      if (playPromise) {
+        playPromise.catch(() => {});
+      }
+    } catch (e) {}
+  },
+
+  startMusic() {
+    if (this.muted) return;
+
+    this.music.loop = true;
+    this.music.volume = this.musicVolume;
+
+    const playPromise = this.music.play();
+    if (playPromise) {
+      playPromise.catch(() => {});
+    }
+  },
+
+  stopMusic() {
+    this.music.pause();
+    this.music.currentTime = 0;
+  },
+
+  pauseMusic() {
+    this.music.pause();
+  }
+};
+
+AUDIO.music.loop = true;
+AUDIO.music.preload = 'auto';
+
+Object.values(AUDIO.sounds).forEach(sound => {
+  sound.preload = 'auto';
+});
+
 
 
 if (AdMob) {
