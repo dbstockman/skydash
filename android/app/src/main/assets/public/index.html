@@ -3883,7 +3883,7 @@ vy: (bird.y - skyTitan.y) * 0.018 + spreadOffset * 0.01,
 e.y += e.vy || 0;
         const hitBird = Math.hypot(e.x - bird.x, e.y - bird.y) < e.r + bird.radius;
 
-        if (hitBird && !bird.invincible && !bird.testInvincible) {
+      if (hitBird && !bird.invincible) {
           e.hit = true;
 
           if (bird.shieldActive) {
@@ -3970,7 +3970,7 @@ if (Math.floor(score / 10) % 10 === 5 && meteorTimer > 140) {
     }
 
     // Lava floor collision
-if (bird.y + bird.radius > H - 40 && !bird.invincible && !bird.testInvincible) {
+if (bird.y + bird.radius > H - 40 && !bird.invincible) {
 
         if (bird.shieldActive) {
             bird.shieldActive = false;
@@ -4024,7 +4024,7 @@ ctx.fill();
         // collision
         const hit = Math.hypot(b.x - bird.x, b.y - bird.y) < b.r + bird.radius - 3;
 
- if (hit && !bird.invincible && !bird.testInvincible) {
+if (hit && !bird.invincible) {
 
             if (bird.shieldActive) {
 
@@ -4118,7 +4118,7 @@ if (bossMode) {
   bird.y > bossDragon.y - 18 &&
   bird.y < bossDragon.y + 18;
 
-if (hitFire && !bird.invincible && !bird.testInvincible) {
+if (hitFire && !bird.invincible) {
 
 if (bird.shieldActive) {
   bird.shieldActive = false;
@@ -4164,7 +4164,7 @@ meteors = meteors.filter(m => m.x > -120 && m.y < H + 120);
 meteors = meteors.filter(m => {
   const hitMeteor = Math.hypot(m.x - bird.x, m.y - bird.y) < m.r + bird.radius - 3;
 
-if (hitMeteor && !bird.invincible && !bird.testInvincible) {
+if (hitMeteor && !bird.invincible) {
     if (bird.shieldActive) {
       bird.shieldActive = false;
       bird.shieldTimer = 0;
@@ -4185,7 +4185,7 @@ if (hitMeteor && !bird.invincible && !bird.testInvincible) {
 enemyEggs = enemyEggs.filter(e => {
   const hitBird = Math.hypot(e.x - bird.x, e.y - bird.y) < e.r + 18;
 
-if (hitBird && !bird.invincible && !bird.testInvincible && !bird.shieldActive) {
+if (hitBird && !bird.invincible && !bird.shieldActive) {
     die();
     return false;
   }
@@ -4231,7 +4231,7 @@ enemyPlanes.forEach(p => p.x += p.vx);
 
 enemyPlanes = enemyPlanes.filter(p => p.x > -100);
 for (const m of mines) {
- if (!m.hit && Math.hypot(m.x - bird.x, m.y - bird.y) < 25 && !bird.invincible && !bird.testInvincible) {
+if (!m.hit && Math.hypot(m.x - bird.x, m.y - bird.y) < 25 && !bird.invincible) {
         m.hit = true;
 
         if (bird.shieldActive) {
@@ -4253,8 +4253,8 @@ for (const p of enemyPlanes) {
   if (
     Math.abs(p.x - bird.x) < 35 &&
     Math.abs(p.y - bird.y) < 25 &&
-  !bird.invincible &&
-!bird.testInvincible
+  !bird.invincible 
+
   ) {
 
     if (bird.shieldActive) {
@@ -4326,7 +4326,7 @@ if(bird.y + bird.radius > H - 40) {
   bird.y = H - 40 - bird.radius;
   bird.vy = 0;
 
-if (!bird.invincible && !bird.testInvincible) {
+if (!bird.invincible) {
     die();
   }
 }
@@ -4382,7 +4382,7 @@ if (p.type === 'skyTitanZone') {
   p.passed = true;
   continue;
 }
-if (hit && !bird.invincible && !bird.testInvincible) {
+if (hit && !bird.invincible) {
       if(bird.shieldActive) {
         bird.shieldActive = false;
         bird.shieldTimer = 0;
@@ -5415,7 +5415,7 @@ function loop(timestamp) {
 document.addEventListener('click', e => {
   const btn = e.target.closest('button');
   if (!btn) return;
-  if (btn.id === 'shieldIcon' || btn.id === 'boostIcon' || btn.id === 'starIcon' ||
+if (btn.id === 'shieldIcon' || btn.id === 'boostIcon' ||
       btn.classList.contains('storeBuyBtn') || btn.classList.contains('coinBuyBtn') ||
       btn.classList.contains('gemBuyBtn') || btn.id === 'equipUnlockedBird') return;
   AUDIO.play('uiClick', 0.42);
@@ -5457,12 +5457,6 @@ document.getElementById('shieldIcon').addEventListener('click', e => {
   } else if(save.shields <= 0) {
     showNotif('No shields left!');
   }
-});
-// Temporary Invincible Test Button
-document.getElementById('starIcon').addEventListener('click', e => {
-    e.stopPropagation();
-    bird.testInvincible = !bird.testInvincible;
-    showNotif(bird.testInvincible ? '⭐ INVINCIBLE ON' : '⭐ INVINCIBLE OFF');
 });
 document.getElementById('boostIcon').addEventListener('click', e => {
   e.stopPropagation();
