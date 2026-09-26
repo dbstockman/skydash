@@ -1212,75 +1212,114 @@ style="width:260px;padding:14px 16px;font-size:14px;background:linear-gradient(1
 
 <script>
 // ═══════════════════════════════════════════════════════
-// SKYDASH AUDIO SYSTEM
+// SKYDASH ORIGINAL AUDIO ENGINE — no external audio files
 // ═══════════════════════════════════════════════════════
-
 const AUDIO = {
-  sfxVolume: 0.85,
-  musicVolume: 0.35,
+  ctx: null,
+  master: null,
+  musicTimer: null,
+  musicStep: 0,
   muted: false,
+  sfxVolume: 0.85,
+  musicVolume: 0.16,
 
-  sounds: {
-    flap: new Audio('audio/flap.mp3'),
-    score: new Audio('audio/score.mp3'),
-    hit: new Audio('audio/hit.mp3'),
-    crash: new Audio('audio/crash.mp3'),
-    boost: new Audio('audio/boost.mp3'),
-    shield: new Audio('audio/shield.mp3'),
-    revive: new Audio('audio/revive.mp3'),
-    reward: new Audio('audio/reward.mp3'),
-    levelUp: new Audio('audio/levelup.mp3')
+  init() {
+    if (this.ctx) {
+      if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+      return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    this.ctx = new AC();
+    this.master = this.ctx.createGain();
+    this.master.gain.value = 0.8;
+    this.master.connect(this.ctx.destination);
   },
 
-  music: new Audio('audio/music.mp3'),
-
-  play(name, volume = 1) {
-    if (this.muted) return;
-
-    const sound = this.sounds[name];
-    if (!sound) return;
-
-    try {
-      sound.pause();
-      sound.currentTime = 0;
-      sound.volume = Math.min(1, this.sfxVolume * volume);
-
-      const playPromise = sound.play();
-      if (playPromise) {
-        playPromise.catch(() => {});
-      }
-    } catch (e) {}
+  tone(freq, duration, type='sine', volume=0.18, endFreq=null, delay=0) {
+    this.init();
+    if (!this.ctx || this.muted) return;
+    const now = this.ctx.currentTime + delay;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, now);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(Math.max(20,endFreq), now + duration);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, volume * this.sfxVolume), now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gain);
+    gain.connect(this.master);
+    osc.start(now);
+    osc.stop(now + duration + 0.02);
   },
 
-  startMusic() {
+  play(name, volume=1) {
     if (this.muted) return;
-
-    this.music.loop = true;
-    this.music.volume = this.musicVolume;
-
-    const playPromise = this.music.play();
-    if (playPromise) {
-      playPromise.catch(() => {});
+    const v = volume;
+    switch(name) {
+      case 'flap':
+        this.tone(520,.075,'triangle',.16*v,760); break;
+      case 'score':
+        this.tone(880,.07,'sine',.14*v,1120);
+        this.tone(1320,.09,'sine',.10*v,1580,.045); break;
+      case 'hit':
+        this.tone(150,.14,'square',.18*v,65); break;
+      case 'crash':
+        this.tone(420,.26,'square',.17*v,75); break;
+      case 'boost':
+        this.tone(180,.34,'sawtooth',.10*v,1100); break;
+      case 'shield':
+        this.tone(660,.18,'sine',.12*v,1320);
+        this.tone(990,.22,'sine',.08*v,1760,.025); break;
+      case 'revive':
+        this.tone(523,.09,'triangle',.13*v);
+        this.tone(659,.09,'triangle',.13*v,null,.09);
+        this.tone(1047,.16,'sine',.14*v,null,.18); break;
+      case 'reward':
+        this.tone(988,.07,'sine',.12*v);
+        this.tone(1319,.12,'sine',.13*v,null,.065); break;
+      case 'levelUp':
+        [523,659,784,1047].forEach((f,i)=>this.tone(f,i===3?.20:.09,'triangle',.13*v,null,i*.075));
+        break;
     }
   },
 
-  stopMusic() {
-    this.music.pause();
-    this.music.currentTime = 0;
+  musicNote(freq, when, duration=.22) {
+    if (!this.ctx || this.muted) return;
+    const osc=this.ctx.createOscillator(), gain=this.ctx.createGain();
+    osc.type='triangle';
+    osc.frequency.value=freq;
+    gain.gain.setValueAtTime(0.0001,when);
+    gain.gain.exponentialRampToValueAtTime(this.musicVolume,when+.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001,when+duration);
+    osc.connect(gain); gain.connect(this.master);
+    osc.start(when); osc.stop(when+duration+.02);
+  },
+
+  startMusic() {
+    this.init();
+    if (!this.ctx || this.muted || this.musicTimer) return;
+    const melody=[523,659,784,659,587,784,880,784,523,659,784,1047,880,784,659,587];
+    const tick=()=>{
+      if (!this.ctx || this.muted) return;
+      const f=melody[this.musicStep++ % melody.length];
+      this.musicNote(f,this.ctx.currentTime+.01,.20);
+    };
+    tick();
+    this.musicTimer=setInterval(tick,250);
   },
 
   pauseMusic() {
-    this.music.pause();
+    if (this.musicTimer) clearInterval(this.musicTimer);
+    this.musicTimer=null;
+  },
+
+  stopMusic() {
+    this.pauseMusic();
+    this.musicStep=0;
   }
 };
-
-AUDIO.music.loop = true;
-AUDIO.music.preload = 'auto';
-
-Object.values(AUDIO.sounds).forEach(sound => {
-  sound.preload = 'auto';
-});
-
 
 const AdMob = window.Capacitor?.Plugins?.AdMobPlus || window.Capacitor?.Plugins?.AdMob;
 
