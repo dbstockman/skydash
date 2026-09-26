@@ -1287,11 +1287,6 @@ const AUDIO = {
         // Punchy low launch thump with a tiny snap on top.
         this.tone(145,.085,'sine',.18*v,72);
         this.tone(430,.035,'square',.045*v,260,.006); break;
-      case 'lavaSizzle':
-        // Hot rising hiss/sizzle impression, kept short so repeated lava balls stay satisfying.
-        this.tone(1180,.055,'sawtooth',.045*v,720);
-        this.tone(1850,.035,'square',.025*v,1050,.025);
-        this.tone(760,.08,'triangle',.035*v,420,.045); break;
       case 'planeFly':
         // Quick propeller/engine fly-by pulse; designed for overlapping planes.
         this.tone(105,.16,'sawtooth',.07*v,82);
@@ -3981,7 +3976,6 @@ if (Math.floor(score / 10) % 10 === 5 && frame % 90 === 0) {
 
         r: 8 + Math.random() * 6
     });
-    AUDIO.play('lavaSizzle', 0.8);
 }
     // MOVE LAVA BALLS
     lavaBalls.forEach((b, i) => {
