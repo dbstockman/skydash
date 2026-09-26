@@ -2269,7 +2269,6 @@ let pipeSpeed = 3.2;
 let pipeTimer = 0;
 let enemyBirds = [];
 let enemyEggs = [];
-let birdZoneActive = false;
 let meteors = [];
 let lavaBalls = [];
 let meteorTimer = 0;
@@ -5422,7 +5421,6 @@ if (btn.id === 'shieldIcon' || btn.id === 'boostIcon' ||
 });
 
 // ── INPUT ─────────────────────────────────────────────────
-let lastTap = 0;
 function flap() {
   if(state !== 'playing' || !bird.alive) return;
     bird.vy = bird.flapPower;
