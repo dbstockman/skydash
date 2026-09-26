@@ -1292,6 +1292,24 @@ const AUDIO = {
         this.tone(105,.16,'sawtooth',.07*v,82);
         this.tone(210,.11,'square',.025*v,165,.018);
         this.tone(92,.14,'sine',.055*v,68,.065); break;
+      case 'dragonCharge':
+        this.tone(115,.28,'sawtooth',.085*v,420);
+        this.tone(58,.24,'sine',.08*v,92,.06); break;
+      case 'titanFire':
+        this.tone(240,.07,'square',.07*v,105);
+        this.tone(92,.11,'sine',.09*v,48,.018); break;
+      case 'titanHit':
+        this.tone(640,.045,'triangle',.09*v,920);
+        this.tone(190,.07,'sine',.07*v,115,.018); break;
+      case 'uiClick':
+        this.tone(520,.035,'triangle',.055*v,650); break;
+      case 'equip':
+        this.tone(620,.055,'triangle',.075*v,820);
+        this.tone(980,.07,'sine',.06*v,1180,.04); break;
+      case 'purchase':
+        this.tone(740,.055,'triangle',.08*v,940);
+        this.tone(1040,.07,'sine',.075*v,1320,.045);
+        this.tone(1480,.09,'sine',.06*v,1660,.095); break;
     }
   },
 
@@ -1795,6 +1813,7 @@ function showBirdUnlockCelebration(birdId) {
   document.getElementById('equipUnlockedBird').addEventListener('click', () => {
   save.equipped.birds = birdId;
   persist();
+  AUDIO.play('equip', 0.8);
 
   overlay.style.opacity = '0';
 
@@ -3816,6 +3835,7 @@ skyTitan.shootTimer++;
     if (Math.abs(dx) < 70 && Math.abs(dy) < 85) {
       e.hit = true;
       skyTitan.hp -= 1;
+      if (skyTitan.hp > 0) AUDIO.play('titanHit', 0.52);
  if (skyTitan.hp <= 0) {
   skyTitan.hp = 0;
   skyTitan.alive = false;
@@ -3842,6 +3862,7 @@ if (skyTitan.hp <= skyTitan.maxHp * 0.33) {
       const fireDelay = bossPhase === 1 ? 75 : bossPhase === 2 ? 50 : 60;
 
 if (frame % fireDelay === 0) {
+     AUDIO.play('titanFire', 0.68);
      const eggCount = bossPhase === 3 ? 2 : 1;
 
 for (let i = 0; i < eggCount; i++) {
@@ -4081,6 +4102,7 @@ if (bossMode) {
     bossDragon.y += (bossDragon.targetY - bossDragon.y) * 0.08;
 
     bossDragon.fireTimer++;
+    if (bossDragon.fireTimer === 145) AUDIO.play('dragonCharge', 0.85);
 
     if (bossDragon.fireTimer > 180) {
         bossDragon.fireTimer = 0;
@@ -5390,6 +5412,16 @@ function loop(timestamp) {
   animId = requestAnimationFrame(loop);
 }
 
+// Subtle menu click feedback. Gameplay controls keep their own dedicated sounds.
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  if (btn.id === 'shieldIcon' || btn.id === 'boostIcon' || btn.id === 'starIcon' ||
+      btn.classList.contains('storeBuyBtn') || btn.classList.contains('coinBuyBtn') ||
+      btn.classList.contains('gemBuyBtn') || btn.id === 'equipUnlockedBird') return;
+  AUDIO.play('uiClick', 0.42);
+});
+
 // ── INPUT ─────────────────────────────────────────────────
 let lastTap = 0;
 function flap() {
@@ -5807,6 +5839,7 @@ function renderShopTab(cat) {
       if(isOwned || item.free) {
         save.equipped[cat] = item.id;
         persist();
+        AUDIO.play('equip', 0.75);
         renderShopTab(cat);
         showNotif('Equipped '+item.name+'!');
       } else {
@@ -5816,6 +5849,7 @@ function renderShopTab(cat) {
     save.owned[cat+'_'+item.id] = true;
     save.equipped[cat] = item.id;
     persist();
+    AUDIO.play('purchase', 0.8);
     updateCoinDisplays();
     renderShopTab(cat);
     showNotif('Bought & equipped '+item.name+'!');
@@ -5828,6 +5862,7 @@ function renderShopTab(cat) {
     save.owned[cat+'_'+item.id] = true;
     save.equipped[cat] = item.id;
     persist();
+    AUDIO.play('purchase', 0.8);
     updateCoinDisplays();
     renderShopTab(cat);
     showNotif('Bought & equipped '+item.name+'!');
@@ -5895,6 +5930,7 @@ await NativePurchases.purchaseProduct({
 });
 
   if (item.id === "remove_ads") {
+  AUDIO.play('purchase', 0.9);
   localStorage.setItem("removeAdsOwned", "true");
   alert("Purchase successful! Remove Ads unlocked.");
 } else {
@@ -5908,6 +5944,7 @@ await NativePurchases.purchaseProduct({
   const amount = gemAmounts[item.id];
 
   if (amount) {
+    AUDIO.play('purchase', 0.9);
     save.gems += amount;
     persist();
     updateCoinDisplays();
