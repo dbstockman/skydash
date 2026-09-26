@@ -1311,6 +1311,47 @@ const AUDIO = {
     this.musicTimer=setInterval(tick,250);
   },
 
+  bossMusicType: null,
+
+  startBossMusic(type) {
+    this.init();
+    if (!this.ctx || this.muted || this.bossMusicType === type) return;
+    this.stopMusic();
+    this.bossMusicType = type;
+    this.musicStep = 0;
+
+    const dragonBass=[82,82,98,82,110,98,73,82];
+    const dragonStab=[165,196,220,196,147,165,196,147];
+    const titanBass=[65,73,65,82,65,98,73,62];
+    const titanStab=[130,155,196,174,130,220,196,155];
+    const bass = type === 'titan' ? titanBass : dragonBass;
+    const stab = type === 'titan' ? titanStab : dragonStab;
+    const interval = type === 'titan' ? 155 : 190;
+
+    const tick=()=>{
+      if (!this.ctx || this.muted || this.bossMusicType !== type) return;
+      const step=this.musicStep++;
+      const now=this.ctx.currentTime+.01;
+      const b=bass[step % bass.length];
+      this.musicNote(b,now,type === 'titan' ? .14 : .17);
+      if (step % 2 === 0) {
+        const f=stab[(step/2) % stab.length];
+        this.musicNote(f,now+.035,type === 'titan' ? .11 : .13);
+      }
+      // Low heartbeat-like impact gives the fight tension without masking SFX.
+      if (step % 4 === 0) this.tone(type === 'titan' ? 58 : 68,.10,'sine',.055,42);
+    };
+    tick();
+    this.musicTimer=setInterval(tick,interval);
+  },
+
+  stopBossMusic() {
+    if (this.musicTimer) clearInterval(this.musicTimer);
+    this.musicTimer=null;
+    this.bossMusicType=null;
+    this.musicStep=0;
+  },
+
   pauseMusic() {
     if (this.musicTimer) clearInterval(this.musicTimer);
     this.musicTimer=null;
@@ -1318,6 +1359,7 @@ const AUDIO = {
 
   stopMusic() {
     this.pauseMusic();
+    this.bossMusicType=null;
     this.musicStep=0;
   }
 };
@@ -3703,13 +3745,16 @@ const bottomY = 390 + landShift + PIPE_GAP / 2;
   }
   pipes.forEach(p => {
  if (p.type === 'bossZone') {
+  if (!bossMode) AUDIO.startBossMusic('dragon');
   bossMode = true;
 } else if (bossMode && p.type !== 'bossZone') {
   bossMode = false;
+  AUDIO.stopBossMusic();
 }
 
 if (p.type === 'skyTitanZone') {
   if (!skyTitanMode) {
+  AUDIO.startBossMusic('titan');
   titanPlayerHP = titanPlayerMaxHP;
 
   skyTitan.hp = skyTitan.maxHp;
@@ -3766,6 +3811,7 @@ skyTitan.shootTimer++;
   skyTitan.alive = false;
   titanDefeated = true;
   skyTitanMode = false;
+  AUDIO.stopBossMusic();
   playerEggs = [];
   titanEggs = [];
   pipes = [];
@@ -4324,6 +4370,7 @@ if (hit && !bird.invincible && !bird.testInvincible) {
 
 function die() {
   if(!bird.alive) return;
+  AUDIO.stopBossMusic();
   AUDIO.play('crash', 1);
   bird.alive = false;
   state = 'dead';
@@ -5403,6 +5450,7 @@ if(save.boosts > 0 && !bird.boostActive && !boostUsedThisRun) {
 
 // ── SCREENS ───────────────────────────────────────────────
 function showHome() {
+  AUDIO.stopBossMusic();
   state = 'home';
 updateHomeXpDisplay();
   document.getElementById('homeScreen').classList.remove('hidden');
