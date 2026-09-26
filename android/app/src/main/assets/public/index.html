@@ -1283,6 +1283,20 @@ const AUDIO = {
       case 'levelUp':
         [523,659,784,1047].forEach((f,i)=>this.tone(f,i===3?.20:.09,'triangle',.13*v,null,i*.075));
         break;
+      case 'enemyShot':
+        // Punchy low launch thump with a tiny snap on top.
+        this.tone(145,.085,'sine',.18*v,72);
+        this.tone(430,.035,'square',.045*v,260,.006); break;
+      case 'lavaSizzle':
+        // Hot rising hiss/sizzle impression, kept short so repeated lava balls stay satisfying.
+        this.tone(1180,.055,'sawtooth',.045*v,720);
+        this.tone(1850,.035,'square',.025*v,1050,.025);
+        this.tone(760,.08,'triangle',.035*v,420,.045); break;
+      case 'planeFly':
+        // Quick propeller/engine fly-by pulse; designed for overlapping planes.
+        this.tone(105,.16,'sawtooth',.07*v,82);
+        this.tone(210,.11,'square',.025*v,165,.018);
+        this.tone(92,.14,'sine',.055*v,68,.065); break;
     }
   },
 
@@ -3713,6 +3727,7 @@ const bottomY = 390 + landShift + PIPE_GAP / 2;
       y: y + offsetY,
       vx: -6
     });
+    AUDIO.play('planeFly', 0.7);
   }
 
   if (stageLevel <= 2) {
@@ -3966,6 +3981,7 @@ if (Math.floor(score / 10) % 10 === 5 && frame % 90 === 0) {
 
         r: 8 + Math.random() * 6
     });
+    AUDIO.play('lavaSizzle', 0.8);
 }
     // MOVE LAVA BALLS
     lavaBalls.forEach((b, i) => {
@@ -4050,6 +4066,7 @@ const birdY = birdPositions[i] || ((p.top + p.bottom) / 2);
   y: birdY,
   r: 9
 });
+       AUDIO.play('enemyShot', 0.72);
 
       }
     }
