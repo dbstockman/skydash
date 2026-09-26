@@ -1282,6 +1282,7 @@ Object.values(AUDIO.sounds).forEach(sound => {
 });
 
 
+const AdMob = window.Capacitor?.Plugins?.AdMobPlus || window.Capacitor?.Plugins?.AdMob;
 
 if (AdMob) {
   AdMob.start({
