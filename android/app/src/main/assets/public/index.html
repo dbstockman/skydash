@@ -1261,8 +1261,9 @@ const AUDIO = {
       case 'flap':
         this.tone(520,.075,'triangle',.16*v,760); break;
       case 'score':
-        this.tone(880,.07,'sine',.14*v,1120);
-        this.tone(1320,.09,'sine',.10*v,1580,.045); break;
+        // Short tactile pillar-pass pop: distinct from the bright coin/reward chime
+        this.tone(310,.045,'triangle',.12*v,390);
+        this.tone(195,.055,'sine',.055*v,165,.018); break;
       case 'hit':
         this.tone(150,.14,'square',.18*v,65); break;
       case 'crash':
