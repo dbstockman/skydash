@@ -1751,6 +1751,7 @@ function claimLevelReward(level) {
   persist();
   updateCoinDisplays();
   renderLevelRewards();
+  AUDIO.play('reward', 0.9);
 }
 
 function xpNeededForLevel(level) {
@@ -1776,6 +1777,7 @@ function checkPlayerLevelUp() {
   }
 }
 function showLevelUpAnimation() {
+  AUDIO.play('levelUp', 1);
   const popup = document.createElement('div');
 
   popup.innerHTML = `
@@ -3777,8 +3779,7 @@ e.y += e.vy || 0;
           } else {
     titanPlayerHP--;
     damageFlash = 8;
-    hitSound.currentTime = 0;
-hitSound.play().catch(() => {});
+    AUDIO.play('hit', 0.9);
 
     spawnParticles(bird.x, bird.y, '#00ff66', 25);
 
@@ -3807,6 +3808,7 @@ hitSound.play().catch(() => {});
     if(!p.passed && p.x + PIPE_W < bird.x) {
       p.passed = true;
       score++;
+      AUDIO.play('score', 0.7);
  
       if (bird.boostActive) {
     bird.boostPillarsLeft--;
@@ -4180,9 +4182,8 @@ save.coins += doubleCoinsAdActive ? coinValue * 2 : coinValue;
 runCoinsAwarded += coinValue;
 
       setTimeout(() => {
-  coinSound.currentTime = 0;
-  coinSound.play().catch(() => {});
-}, 150);
+        AUDIO.play('reward', 0.45);
+      }, 150);
 
       persist();
       updateCoinDisplays();
@@ -4283,6 +4284,7 @@ if (hit && !bird.invincible && !bird.testInvincible) {
 
 function die() {
   if(!bird.alive) return;
+  AUDIO.play('crash', 1);
   bird.alive = false;
   state = 'dead';
 const earned = Math.floor(score * 1.5) * (window.doubleCoinsActive ? 2 : 1);
@@ -5295,6 +5297,7 @@ let lastTap = 0;
 function flap() {
   if(state !== 'playing' || !bird.alive) return;
     bird.vy = bird.flapPower;
+    AUDIO.play('flap', 0.7);
     spawnParticles(bird.x - 10, bird.y + 10, BIRD_COLORS[save.equipped.color] || '#FFD700', 4);
   }
 
@@ -5316,6 +5319,7 @@ document.getElementById('shieldIcon').addEventListener('click', e => {
   if(state !== 'playing') return;
   if(save.shields > 0 && !bird.shieldActive && !shieldUsedThisRun) {
     bird.shieldActive = true;
+    AUDIO.play('shield', 0.9);
     shieldUsedThisRun = true;
     bird.shieldTimer = 3600;
     persist();
@@ -5336,6 +5340,7 @@ document.getElementById('boostIcon').addEventListener('click', e => {
   if(state !== 'playing') return;
 if(save.boosts > 0 && !bird.boostActive && !boostUsedThisRun) {
     bird.boostActive = true;
+    AUDIO.play('boost', 0.95);
     boostUsedThisRun = true;
     bird.boostPillarsLeft = 10;
 
@@ -5369,6 +5374,7 @@ draw();
 }
 
 function startGame() {
+  AUDIO.startMusic();
   runXpAwarded = 0;
   state = 'playing';
 persist();
@@ -5440,6 +5446,7 @@ ctx.clearRect(0, 0, W, H);
   loop();
 }
 function revivePlayer(consumeRevive = true) {
+ AUDIO.play('revive', 1);
  if (consumeRevive) {
   reviveUsed = true;
   window.revivedThisRun = true;
@@ -6273,12 +6280,10 @@ function updateEggUI() {
 }
 
 function crackEgg() {
-tapSound.currentTime = 0;
-tapSound.play().catch(() => {});
+AUDIO.play('flap', 0.35);
 
 setTimeout(() => {
-  coinSound.currentTime = 0;
-  coinSound.play().catch(() => {});
+  AUDIO.play('reward', 0.6);
 }, 150);
 
   const roll = Math.random();
